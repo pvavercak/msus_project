@@ -58,6 +58,25 @@
 		<desc>Name of chosen meal</desc>
 		<init>value</init>
 	</data>
+	<data type="number">
+		<id>number_0</id>
+		<title>set label</title>
+		<placeholder>placeholder</placeholder>
+		<desc>description</desc>
+		<init>3</init>
+	</data>
+	<data type="number">
+		<id>4000</id>
+		<title>On login success</title>
+		<desc>succ</desc>
+		<init>0</init>
+	</data>
+	<data type="number">
+		<id>4001</id>
+		<title>On login failed</title>
+		<desc>fail</desc>
+		<init>0</init>
+	</data>
 	<!-- I18NS -->
 	<!-- TRANSITIONS -->
 	<transition>
@@ -69,8 +88,25 @@
 		</layout>
 		<label>Log In</label>
 		<dataGroup>
+			<id>DataGroup_1</id>
+			<dataRef>
+				<id>number_0</id>
+				<logic>
+					<behavior>editable</behavior>
+				</logic>
+				<layout>
+					<x>2</x>
+					<y>2</y>
+					<rows>1</rows>
+					<cols>1</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+		</dataGroup>
+		<dataGroup>
 			<id>DataGroup_0</id>
-			<layout>grid</layout>
 			<dataRef>
 				<id>email_field</id>
 				<logic>
@@ -114,15 +150,18 @@
 					<cols>2</cols>
 					<offset>0</offset>
 					<template>material</template>
+					<appearance></appearance>
 				</layout>
 			</dataRef>
 		</dataGroup>
 		<event type="finish">
-            <id>2_finish</id>
-            <actions phase="post">
-                <action trigger="set">
+			<id>2_finish</id>
+			<actions phase="pre">
+				<action trigger="set">
 					email : f.email_field,
 					logged : f.logged,
+					success : f.4000,
+					fail : f.4001,
 					passwd : f.passwd_field;
 
 					def groupId = findCase{it.processIdentifier.eq("org_group").and(it.author.id.eq(loggedUser().id))}?.stringId;
@@ -132,32 +171,52 @@
 					def data = getData(task);
 					def database = data["enumeration_0"].options;
 
+					change success value {
+						return 1;
+					};
+					change fail value {
+						return 0;
+					};
 
 					if (!database.containsKey(email.value)) {
-						async.run{
-							cancelTask("2");
-						}
+						change fail value {
+							return 1;
+						};
+						change success value {
+							return 0;
+						};
 					}
 					def pom = database.get(email.value) as String;
 					if (passwd.value != pom) {
-						async.run{
-							cancelTask("2");
-						}
+						change fail value {
+							return 1;
+						};
+						change success value {
+							return 0;
+						};
 					}
 					<!-- if (database.containsKey(email.value)) {
 						def pom = database.get(email.value) as String;
 						if (passwd.value == pom) {
-							change logged value {
-								return true;
-							};
-						} else {
 							
+						} else {
+							change fail value {
+								return 1;
+							}
+						}
+					} else {
+						change fail value {
+							return 1;
 						}
 					} -->
+
+
+					
+					
 					<!-- TODO: output on failed login -->
                 </action>
-            </actions>
-        </event>
+			</actions>
+		</event>
 	</transition>
 	<transition>
 		<id>6</id>
@@ -169,7 +228,6 @@
 		<label>Choose Day</label>
 		<dataGroup>
 			<id>DataGroup_0</id>
-			<layout>grid</layout>
 			<dataRef>
 				<id>enumeration_0</id>
 				<logic>
@@ -197,7 +255,6 @@
 		<label>Order Meal</label>
 		<dataGroup>
 			<id>DataGroup_0</id>
-			<layout>grid</layout>
 			<dataRef>
 				<id>taskRef_0</id>
 				<logic>
@@ -225,7 +282,6 @@
 		<label>Confirm</label>
 		<dataGroup>
 			<id>DataGroup_0</id>
-			<layout>grid</layout>
 			<dataRef>
 				<id>email_field</id>
 				<logic>
@@ -301,7 +357,6 @@
 		<label>Delete Order</label>
 		<dataGroup>
 			<id>DataGroup_0</id>
-			<layout>grid</layout>
 			<dataRef>
 				<id>boolean_0</id>
 				<logic>
@@ -314,6 +369,7 @@
 					<cols>2</cols>
 					<offset>0</offset>
 					<template>material</template>
+					<appearance></appearance>
 				</layout>
 			</dataRef>
 		</dataGroup>
@@ -323,7 +379,7 @@
 		<id>1</id>
 		<x>60</x>
 		<y>220</y>
-		<label></label>
+		<label>Login Page</label>
 		<tokens>1</tokens>
 		<static>false</static>
 	</place>
@@ -352,20 +408,6 @@
 		<static>false</static>
 	</place>
 	<!-- ARCS -->
-	<arc>
-		<id>3</id>
-		<type>regular</type>
-		<sourceId>1</sourceId>
-		<destinationId>2</destinationId>
-		<multiplicity>1</multiplicity>
-	</arc>
-	<arc>
-		<id>5</id>
-		<type>regular</type>
-		<sourceId>2</sourceId>
-		<destinationId>4</destinationId>
-		<multiplicity>1</multiplicity>
-	</arc>
 	<arc>
 		<id>7</id>
 		<type>regular</type>
@@ -462,6 +504,39 @@
 		<type>regular</type>
 		<sourceId>69</sourceId>
 		<destinationId>4</destinationId>
+		<multiplicity>1</multiplicity>
+	</arc>
+	<arc>
+		<id>73</id>
+		<type>regular</type>
+		<sourceId>1</sourceId>
+		<destinationId>2</destinationId>
+		<multiplicity>1</multiplicity>
+		<breakPoint><x>127</x><y>251</y></breakPoint>
+	</arc>
+	<arc>
+		<id>74</id>
+		<type>regular</type>
+		<sourceId>2</sourceId>
+		<destinationId>4</destinationId>
+		<multiplicity>1</multiplicity>
+		<reference>1</reference>
+	</arc>
+	<arc>
+		<id>75</id>
+		<type>regular</type>
+		<sourceId>2</sourceId>
+		<destinationId>1</destinationId>
+		<multiplicity>0</multiplicity>
+		<reference>4001</reference>
+		<breakPoint><x>158</x><y>196</y></breakPoint>
+		<breakPoint><x>128</x><y>184</y></breakPoint>
+	</arc>
+	<arc>
+		<id>76</id>
+		<type>regular</type>
+		<sourceId>63</sourceId>
+		<destinationId>1</destinationId>
 		<multiplicity>1</multiplicity>
 	</arc>
 </document>
