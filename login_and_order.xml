@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <document xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://modeler.netgrif.com/petriflow_schema.xsd">
-	<id>1_login</id>
-	<version>1.0.0</version>
-	<initials>LO1</initials>
-	<title>Login v1</title>
+	<id>2_login</id>
+	<version>2.0.0</version>
+	<initials>LO2</initials>
+	<title>Login v2</title>
 	<defaultRole>true</defaultRole>
 	<transitionRole>false</transitionRole>
 	<!-- TRANSACTIONS -->
@@ -287,6 +287,19 @@
 				</layout>
 			</dataRef>
 		</dataGroup>
+		<event type="assign">
+			<id>1_assign</id>
+			<actions phase="pre">
+				<action>
+					today: f.date_1,
+					newMenu: f.enumeration_1;
+
+					change today value {
+						return new Date();
+					}
+				</action>
+			</actions>
+		</event>
 	</transition>
 	<transition>
 		<id>40</id>
