@@ -25,8 +25,12 @@
 		<desc>Menu overview</desc>
 		<!-- <init>option1</init> -->
 		<options>
-        	<option key="dumplings">5</option>
-			<option key="friedcheese">2,8</option>
+        	<option key="Classical slovak dumplings">Meal: Classical slovak dumplings, Price: 5.00</option>
+			<option key="Fried cheese">Meal: Fried cheese, Price: 3.80</option>
+			<option key="Beef steak with rice and mushroom sausage">Meal: Chicken steak with rice and mushroom sausage, Price: 8.50</option>
+			<option key="Grilled Cheeseburger">Meal: Grilled Cheeseburger, Price: 4.80</option>
+			<option key="Apple Pie">Meal: Apple Pie, Price: 2.80</option>
+			<option key="Chicken Stroganov">Meal: Chicken Stroganov, Price: 6.10</option>
         </options>
 	</data>
 	<!-- I18NS -->
