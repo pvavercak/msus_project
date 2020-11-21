@@ -144,17 +144,6 @@
 							cancelTask("2");
 						}
 					}
-					<!-- if (database.containsKey(email.value)) {
-						def pom = database.get(email.value) as String;
-						if (passwd.value == pom) {
-							change logged value {
-								return true;
-							};
-						} else {
-							
-						}
-					} -->
-					<!-- TODO: output on failed login -->
                 </action>
             </actions>
         </event>

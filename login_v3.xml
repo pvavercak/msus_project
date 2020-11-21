@@ -158,10 +158,9 @@
 			<id>2_finish</id>
 			<actions phase="pre">
 				<action trigger="set">
-					email : f.email_field,
-					logged : f.logged,
 					success : f.4000,
 					fail : f.4001,
+					email : f.email_field,
 					passwd : f.passwd_field;
 
 					def groupId = findCase{it.processIdentifier.eq("org_group").and(it.author.id.eq(loggedUser().id))}?.stringId;
@@ -177,7 +176,7 @@
 					change fail value {
 						return 0;
 					};
-
+					
 					if (!database.containsKey(email.value)) {
 						change fail value {
 							return 1;
@@ -185,7 +184,22 @@
 						change success value {
 							return 0;
 						};
+						<!-- change email value {
+							return "Incorrect email!";
+						}
+						change passwd value {
+							return "";
+						} -->
+					} else if (!database.get(email.value).equals(passwd.value)) {
+						change fail value {
+							return 1;
+						};
+						change success value {
+							return 0;
+						};
 					}
+
+<!-- 
 					def pom = database.get(email.value) as String;
 					if (passwd.value != pom) {
 						change fail value {
@@ -194,26 +208,10 @@
 						change success value {
 							return 0;
 						};
-					}
-					<!-- if (database.containsKey(email.value)) {
-						def pom = database.get(email.value) as String;
-						if (passwd.value == pom) {
-							
-						} else {
-							change fail value {
-								return 1;
-							}
-						}
-					} else {
-						change fail value {
-							return 1;
+						change passwd value {
+							return "Incorrect password!";
 						}
 					} -->
-
-
-					
-					
-					<!-- TODO: output on failed login -->
                 </action>
 			</actions>
 		</event>
@@ -516,19 +514,17 @@
 	</arc>
 	<arc>
 		<id>74</id>
-		<type>regular</type>
+		<type>variable</type>
 		<sourceId>2</sourceId>
 		<destinationId>4</destinationId>
-		<multiplicity>1</multiplicity>
-		<reference>1</reference>
+		<multiplicity>4000</multiplicity>
 	</arc>
 	<arc>
 		<id>75</id>
-		<type>regular</type>
+		<type>variable</type>
 		<sourceId>2</sourceId>
 		<destinationId>1</destinationId>
-		<multiplicity>0</multiplicity>
-		<reference>4001</reference>
+		<multiplicity>4001</multiplicity>
 		<breakPoint><x>158</x><y>196</y></breakPoint>
 		<breakPoint><x>128</x><y>184</y></breakPoint>
 	</arc>
