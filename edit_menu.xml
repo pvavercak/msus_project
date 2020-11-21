@@ -19,87 +19,16 @@
 		<desc>Price of the meal</desc>
 		<init>5</init>
 	</data>
-	<!-- <data type="multichoice">
-		<id>multichoice_0</id>
-		<title>Day of the week</title>
-		<desc>Day of the week a meal will be available for</desc>
-		<values>Monday</values>
-		<values>Tuesday</values>
-		<values>Wednesday</values>
-		<values>Thursday</values>
-		<values>Friday</values>
-		<init>Monday, Tuesday, Wednesday, Thursday, Friday</init>
-	</data> -->
 	<data type="enumeration_map">
 		<id>menu_overview</id>
 		<title>Menu</title>
 		<desc>Menu overview</desc>
 		<!-- <init>option1</init> -->
 		<options>
-        	<option key="1">meal 1,5</option>
-			<option key="2">meal 2,8</option>
-			<option key="3">meal 3,4</option>
-			<option key="4">meal 4,9</option>
+        	<option key="dumplings">5</option>
+			<option key="friedcheese">2,8</option>
         </options>
-
-		<action trigger="set">
-			field: f.this,
-			nameField: f.meal_name,
-			priceField: f.meal_price;
-
-			def tokens = field.value.split(',');
-			<!-- nameField.value = "ahoj"; -->
-
-			change nameField value {
-				return tokens[0] as String;
-			}
-
-			change priceField value {
-				return tokens[1] as Integer;
-			}
-
-			<!-- change field choices {
-				return nameField.value = "ahoj"; -->
-				<!-- return nameField.value = field.value; -->
-				<!-- if (other.value == "Nehnutelnost")
-					return field.choices + ["rozostavaná stavba"];
-				return field.choices;  -->
-			<!-- } -->
-		</action>
 	</data>
-
-	<data type="enumeration">
-		<id>menu_overview2</id>
-		<title>Menu</title>
-		<desc>Menu overview</desc>
-		<!-- <init>option1</init> -->
-		<values>Meal 1</values>
-		<values>Meal 2</values>
-		<values>Meal 3</values>
-
-		<action trigger="set">
-			field: f.this,
-			nameField: f.meal_name;
-
-			change nameField value {
-				return field.value;
-			}
-
-			<!-- change field choices {
-				return nameField.value = "ahoj"; -->
-				<!-- return nameField.value = field.value; -->
-				<!-- if (other.value == "Nehnutelnost")
-					return field.choices + ["rozostavaná stavba"];
-				return field.choices;  -->
-			<!-- } -->
-		</action>
-	</data>
-	<!-- <data type="enumeration">
-		<id>enumeration_3</id>
-		<title>Menu</title>
-		<desc>Menu Overview</desc>
-		<init>option1</init>
-	</data> -->
 	<!-- I18NS -->
 	<!-- TRANSITIONS -->
 	<transition>
@@ -144,6 +73,23 @@
 				</layout>
 			</dataRef>
 		</dataGroup>
+		<event type="finish">
+			<id>1_finish</id>
+			<actions phase="pre">
+				<action trigger="set">
+					name: f.meal_name,
+					price: f.meal_price,
+					menu: f.menu_overview;
+
+					def oldMenu = menu.options;
+					oldMenu.put(name.value,"Meal: " + name.value + " , Price: " + price.value);
+					change menu options {
+						return oldMenu;
+					}
+
+				</action>
+			</actions>
+		</event>
 	</transition>
 	<transition>
 		<id>95</id>
@@ -202,6 +148,28 @@
 				</layout>
 			</dataRef>
 		</dataGroup>
+		<event type="finish">
+			<id>2_finish</id>
+			<actions phase="pre">
+				<action trigger="set">
+					name: f.meal_name,
+					price: f.meal_price,
+					menu: f.menu_overview;
+
+					def oldMenu = menu.options;
+					<!-- Halusky : 4E -->
+					if (oldMenu.containsKey(name.value)) {
+						oldMenu.put(name.value,"Meal: " + name.value + " , Price: " + price.value);
+					}else{
+						oldMenu.remove(menu.value);
+						oldMenu.put(name.value,"Meal: " + name.value + " , Price: " + price.value);
+					}
+					change menu options {
+							return oldMenu;
+						} 
+				</action>
+			</actions>
+		</event>
 	</transition>
 	<!-- PLACES -->
 	<place>
