@@ -1,25 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <document xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://modeler.netgrif.com/petriflow_schema.xsd">
-	<id>new_model</id>
-	<initials>NEW</initials>
-	<title>New Model</title>
+	<id>menu</id>
+	<initials>menu</initials>
+	<title>Menu</title>
 	<defaultRole>true</defaultRole>
 	<transitionRole>false</transitionRole>
 	<!-- TRANSACTIONS -->
 	<!-- ROLES -->
 	<!-- DATA -->
 	<data type="text">
-		<id>text_0</id>
+		<id>meal_name</id>
 		<title>Meal Name</title>
 		<desc>Provide meal name</desc>
 	</data>
 	<data type="number">
-		<id>number_0</id>
+		<id>meal_price</id>
 		<title>Price</title>
 		<desc>Price of the meal</desc>
 		<init>5</init>
 	</data>
-	<data type="multichoice">
+	<!-- <data type="multichoice">
 		<id>multichoice_0</id>
 		<title>Day of the week</title>
 		<desc>Day of the week a meal will be available for</desc>
@@ -29,19 +29,77 @@
 		<values>Thursday</values>
 		<values>Friday</values>
 		<init>Monday, Tuesday, Wednesday, Thursday, Friday</init>
-	</data>
-	<data type="enumeration">
-		<id>enumeration_2</id>
+	</data> -->
+	<data type="enumeration_map">
+		<id>menu_overview</id>
 		<title>Menu</title>
 		<desc>Menu overview</desc>
-		<init>option1</init>
+		<!-- <init>option1</init> -->
+		<options>
+        	<option key="1">meal 1,5</option>
+			<option key="2">meal 2,8</option>
+			<option key="3">meal 3,4</option>
+			<option key="4">meal 4,9</option>
+        </options>
+
+		<action trigger="set">
+			field: f.this,
+			nameField: f.meal_name,
+			priceField: f.meal_price;
+
+			def tokens = field.value.split(',');
+			<!-- nameField.value = "ahoj"; -->
+
+			change nameField value {
+				return tokens[0] as String;
+			}
+
+			change priceField value {
+				return tokens[1] as Integer;
+			}
+
+			<!-- change field choices {
+				return nameField.value = "ahoj"; -->
+				<!-- return nameField.value = field.value; -->
+				<!-- if (other.value == "Nehnutelnost")
+					return field.choices + ["rozostavaná stavba"];
+				return field.choices;  -->
+			<!-- } -->
+		</action>
 	</data>
+
 	<data type="enumeration">
+		<id>menu_overview2</id>
+		<title>Menu</title>
+		<desc>Menu overview</desc>
+		<!-- <init>option1</init> -->
+		<values>Meal 1</values>
+		<values>Meal 2</values>
+		<values>Meal 3</values>
+
+		<action trigger="set">
+			field: f.this,
+			nameField: f.meal_name;
+
+			change nameField value {
+				return field.value;
+			}
+
+			<!-- change field choices {
+				return nameField.value = "ahoj"; -->
+				<!-- return nameField.value = field.value; -->
+				<!-- if (other.value == "Nehnutelnost")
+					return field.choices + ["rozostavaná stavba"];
+				return field.choices;  -->
+			<!-- } -->
+		</action>
+	</data>
+	<!-- <data type="enumeration">
 		<id>enumeration_3</id>
 		<title>Menu</title>
 		<desc>Menu Overview</desc>
 		<init>option1</init>
-	</data>
+	</data> -->
 	<!-- I18NS -->
 	<!-- TRANSITIONS -->
 	<transition>
@@ -56,7 +114,7 @@
 			<id>DataGroup_0</id>
 			<layout>grid</layout>
 			<dataRef>
-				<id>text_0</id>
+				<id>meal_name</id>
 				<logic>
 					<behavior>editable</behavior>
 				</logic>
@@ -71,7 +129,7 @@
 				</layout>
 			</dataRef>
 			<dataRef>
-				<id>number_0</id>
+				<id>meal_price</id>
 				<logic>
 					<behavior>editable</behavior>
 				</logic>
@@ -99,7 +157,7 @@
 			<id>DataGroup_0</id>
 			<layout>grid</layout>
 			<dataRef>
-				<id>enumeration_2</id>
+				<id>menu_overview</id>
 				<logic>
 					<behavior>editable</behavior>
 				</logic>
@@ -114,7 +172,7 @@
 				</layout>
 			</dataRef>
 			<dataRef>
-				<id>text_0</id>
+				<id>meal_name</id>
 				<logic>
 					<behavior>editable</behavior>
 				</logic>
@@ -129,7 +187,7 @@
 				</layout>
 			</dataRef>
 			<dataRef>
-				<id>number_0</id>
+				<id>meal_price</id>
 				<logic>
 					<behavior>editable</behavior>
 				</logic>
