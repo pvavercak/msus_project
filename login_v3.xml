@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <document xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://modeler.netgrif.com/petriflow_schema.xsd">
-	<id>login_v1</id>
-	<initials>LOG</initials>
-	<title>Login and Order</title>
+	<id>login_v2</id>
+	<initials>LG2</initials>
+	<title>Login v2</title>
 	<defaultRole>true</defaultRole>
 	<transitionRole>false</transitionRole>
 	<!-- TRANSACTIONS -->
@@ -76,6 +76,11 @@
 		<title>On login failed</title>
 		<desc>fail</desc>
 		<init>0</init>
+	</data>
+	<data type="enumeration">
+		<id>enumeration_1</id>
+		<title>Today's Offer</title>
+		<desc>Meals you can order for this day</desc>
 	</data>
 	<!-- I18NS -->
 	<!-- TRANSITIONS -->
@@ -184,12 +189,6 @@
 						change success value {
 							return 0;
 						};
-						<!-- change email value {
-							return "Incorrect email!";
-						}
-						change passwd value {
-							return "";
-						} -->
 					} else if (!database.get(email.value).equals(passwd.value)) {
 						change fail value {
 							return 1;
@@ -198,20 +197,6 @@
 							return 0;
 						};
 					}
-
-<!-- 
-					def pom = database.get(email.value) as String;
-					if (passwd.value != pom) {
-						change fail value {
-							return 1;
-						};
-						change success value {
-							return 0;
-						};
-						change passwd value {
-							return "Incorrect password!";
-						}
-					} -->
                 </action>
 			</actions>
 		</event>
@@ -254,14 +239,15 @@
 		<dataGroup>
 			<id>DataGroup_0</id>
 			<dataRef>
-				<id>taskRef_0</id>
+				<id>enumeration_1</id>
 				<logic>
 					<behavior>editable</behavior>
+					<behavior>required</behavior>
 				</logic>
 				<layout>
 					<x>0</x>
-					<y>0</y>
-					<rows>2</rows>
+					<y>2</y>
+					<rows>1</rows>
 					<cols>4</cols>
 					<offset>0</offset>
 					<template>material</template>
@@ -269,6 +255,26 @@
 				</layout>
 			</dataRef>
 		</dataGroup>
+		<event type="assign">
+			<id>1_assign</id>
+			<actions phase="pre">
+				<action trigger="set">
+					enum: f.enumeration_1;
+
+					def groupId = findCase{it.processIdentifier.eq("org_group").and(it.author.id.eq(loggedUser().id))}?.stringId;
+					def menucase = findCase{it.processIdentifier.eq("${groupId}_menu_v3" as String)};
+
+					def data = getData("122", menucase);
+					def menu = data["menu_overview"].options;
+					change enum value {
+						return menu;
+					}
+					<!-- for(entry in menu) {
+						
+					} -->
+				</action>
+			</actions>
+		</event>
 	</transition>
 	<transition>
 		<id>34</id>
