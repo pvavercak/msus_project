@@ -1,21 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <document xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://modeler.netgrif.com/petriflow_schema.xsd">
-	<id>add_person_test</id>
+	<id>1_add_person</id>
 	<version>1.0.0</version>
-	<initials>APT</initials>
-	<title>Add Person Test3</title>
+	<initials>ADP</initials>
+	<title>Add Person v1</title>
 	<icon>home</icon>
 	<defaultRole>true</defaultRole>
 	<transitionRole>false</transitionRole>
 	<!-- TRANSACTIONS -->
 	<!-- ROLES -->
 	<!-- DATA -->
-	<data type="text">
-		<id>uname</id>
-		<title>First and Last Name</title>
-		<desc>Fill in name of a new user</desc>
-		<init>value</init>
-	</data>
 	<data type="text">
 		<id>email</id>
 		<title>Email</title>
@@ -26,15 +20,6 @@
 		<id>password</id>
 		<title>Password</title>
 		<desc>Choose a strong password</desc>
-	</data>
-	<data type="enumeration">
-		<id>employment</id>
-		<title>Employment Type</title>
-		<desc>Choose a type of employee's contract</desc>
-		<values>FULL-TIME</values>
-		<values>PART-TIME</values>
-		<values>EXTERN</values>
-		<init>FULL-TIME</init>
 	</data>
 	<data type="taskRef">
 		<id>taskRef_0</id>
@@ -52,7 +37,7 @@
 			passwd : f.password;
 
 			def groupId = findCase{it.processIdentifier.eq("org_group").and(it.author.id.eq(loggedUser().id))}?.stringId;
-			def dbcase = findCase{it.processIdentifier.eq("${groupId}_db_v10" as String)};
+			def dbcase = findCase{it.processIdentifier.eq("${groupId}_1_database" as String)};
 			def task = findTask{it.caseId.eq(dbcase.stringId) &amp; it.transitionId.eq("1")};
 
 			def emailReplaced = email.value;
@@ -81,7 +66,7 @@
 			<dataRef>
 				<id>taskRef_0</id>
 				<logic>
-					<behavior>editable</behavior>
+					<behavior>visible</behavior>
 				</logic>
 				<layout>
 					<x>2</x>
@@ -110,21 +95,6 @@
 		</dataGroup>
 		<dataGroup>
 			<id>DataGroup_0</id>
-			<dataRef>
-				<id>uname</id>
-				<logic>
-					<behavior>editable</behavior>
-				</logic>
-				<layout>
-					<x>0</x>
-					<y>0</y>
-					<rows>1</rows>
-					<cols>4</cols>
-					<offset>0</offset>
-					<template>material</template>
-					<appearance>outline</appearance>
-				</layout>
-			</dataRef>
 			<dataRef>
 				<id>email</id>
 				<logic>
@@ -155,32 +125,16 @@
 					<appearance>outline</appearance>
 				</layout>
 			</dataRef>
-			<dataRef>
-				<id>employment</id>
-				<logic>
-					<behavior>editable</behavior>
-				</logic>
-				<layout>
-					<x>0</x>
-					<y>3</y>
-					<rows>1</rows>
-					<cols>4</cols>
-					<offset>0</offset>
-					<template>material</template>
-					<appearance>outline</appearance>
-				</layout>
-			</dataRef>
 		</dataGroup>
 		<event type="assign">
             <id>2_assign</id>
             <actions phase="post">
                 <action>
-                    uname : f.uname,
 					email : f.email,
 					tref : f.taskRef_0,
 					passwd : f.password;
 					def groupId = findCase{it.processIdentifier.eq("org_group").and(it.author.id.eq(loggedUser().id))}?.stringId
-					def dbcase = findCase{it.processIdentifier.eq("${groupId}_db_v10" as String)}
+					def dbcase = findCase{it.processIdentifier.eq("${groupId}_1_database" as String)}
 					def task = findTask{it.caseId.eq(dbcase.stringId) &amp; it.transitionId.eq("1")}
 					change tref value {
 						return [task.stringId]

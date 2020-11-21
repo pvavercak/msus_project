@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <document xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://modeler.netgrif.com/petriflow_schema.xsd">
-	<id>menu_v3</id>
-	<initials>MU3</initials>
+	<id>1_menu</id>
+	<initials>ME1</initials>
 	<title>Menu v3</title>
 	<defaultRole>true</defaultRole>
 	<transitionRole>false</transitionRole>
@@ -194,7 +194,7 @@
 					tref: f.taskRef_0;
 
 					def groupId = findCase{it.processIdentifier.eq("org_group").and(it.author.id.eq(loggedUser().id))}?.stringId
-					def menucase = findCase{it.processIdentifier.eq("${groupId}_menu_v3" as String)}
+					def menucase = findCase{it.processIdentifier.eq("${groupId}_1_menu" as String)}
 					def task = findTask{it.caseId.eq(menucase.stringId).and(it.transitionId.eq("122"))}
 
 					change tref value {
@@ -204,6 +204,7 @@
 			</actions>
 		</event>
 	</transition>
+	<!-- TODO: Auto Assign Policy -->
 	<transition>
 		<id>122</id>
 		<x>740</x>

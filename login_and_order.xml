@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <document xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://modeler.netgrif.com/petriflow_schema.xsd">
-	<id>login_v2</id>
-	<initials>LG2</initials>
-	<title>Login v2</title>
+	<id>1_login</id>
+	<version>1.0.0</version>
+	<initials>LO1</initials>
+	<title>Login v1</title>
 	<defaultRole>true</defaultRole>
 	<transitionRole>false</transitionRole>
 	<!-- TRANSACTIONS -->
@@ -37,16 +38,6 @@
 		<desc>description</desc>
 		<init>value</init>
 	</data>
-	<data type="boolean">
-		<id>boolean_0</id>
-		<title>Are you sure?</title>
-		<init>false</init>
-	</data>
-	<data type="boolean">
-		<id>logged</id>
-		<title>logged</title>
-		<init>false</init>
-	</data>
 	<data type="date">
 		<id>date_1</id>
 		<title>Date</title>
@@ -57,13 +48,6 @@
 		<title>Meal</title>
 		<desc>Name of chosen meal</desc>
 		<init>value</init>
-	</data>
-	<data type="number">
-		<id>number_0</id>
-		<title>set label</title>
-		<placeholder>placeholder</placeholder>
-		<desc>description</desc>
-		<init>3</init>
 	</data>
 	<data type="number">
 		<id>4000</id>
@@ -93,30 +77,11 @@
 		</layout>
 		<label>Log In</label>
 		<dataGroup>
-			<id>DataGroup_1</id>
-			<dataRef>
-				<id>number_0</id>
-				<logic>
-					<behavior>editable</behavior>
-				</logic>
-				<layout>
-					<x>2</x>
-					<y>2</y>
-					<rows>1</rows>
-					<cols>1</cols>
-					<offset>0</offset>
-					<template>material</template>
-					<appearance>outline</appearance>
-				</layout>
-			</dataRef>
-		</dataGroup>
-		<dataGroup>
 			<id>DataGroup_0</id>
 			<dataRef>
 				<id>email_field</id>
 				<logic>
 					<behavior>editable</behavior>
-					<behavior>required</behavior>
 				</logic>
 				<layout>
 					<x>0</x>
@@ -143,21 +108,6 @@
 					<appearance>outline</appearance>
 				</layout>
 			</dataRef>
-			<dataRef>
-				<id>logged</id>
-				<logic>
-					<behavior>hidden</behavior>
-				</logic>
-				<layout>
-					<x>0</x>
-					<y>2</y>
-					<rows>1</rows>
-					<cols>2</cols>
-					<offset>0</offset>
-					<template>material</template>
-					<appearance></appearance>
-				</layout>
-			</dataRef>
 		</dataGroup>
 		<event type="finish">
 			<id>2_finish</id>
@@ -169,7 +119,7 @@
 					passwd : f.passwd_field;
 
 					def groupId = findCase{it.processIdentifier.eq("org_group").and(it.author.id.eq(loggedUser().id))}?.stringId;
-					def dbcase = findCase{it.processIdentifier.eq("${groupId}_db_v10" as String)};
+					def dbcase = findCase{it.processIdentifier.eq("${groupId}_1_database" as String)};
 					def task = findTask{it.caseId.eq(dbcase.stringId) &amp; it.transitionId.eq("1")};
 
 					def data = getData(task);
@@ -181,15 +131,16 @@
 					change fail value {
 						return 0;
 					};
-					
-					if (!database.containsKey(email.value)) {
+
+					def emailProcessed = email.value.replaceAll(/\./, '_');
+					if (!database.containsKey(emailProcessed)) {
 						change fail value {
 							return 1;
 						};
 						change success value {
 							return 0;
 						};
-					} else if (!database.get(email.value).equals(passwd.value)) {
+					} else if (!database.get(emailProcessed).equals(passwd.value)) {
 						change fail value {
 							return 1;
 						};
@@ -257,21 +208,25 @@
 		</dataGroup>
 		<event type="assign">
 			<id>1_assign</id>
-			<actions phase="pre">
-				<action trigger="set">
-					enum: f.enumeration_1;
+			<actions phase="post">
+				<action>
+					newMenu: f.enumeration_1;
 
 					def groupId = findCase{it.processIdentifier.eq("org_group").and(it.author.id.eq(loggedUser().id))}?.stringId;
-					def menucase = findCase{it.processIdentifier.eq("${groupId}_menu_v3" as String)};
+					def menucase = findCase{it.processIdentifier.eq("${groupId}_1_menu" as String)};
 
 					def data = getData("122", menucase);
 					def menu = data["menu_overview"].options;
-					change enum value {
-						return menu;
+					
+					change newMenu choices {
+						return [];
 					}
-					<!-- for(entry in menu) {
-						
-					} -->
+
+					for(entry in menu) {
+						change newMenu choices {
+							return newMenu.choices + [entry.getValue()];
+						}
+					}
 				</action>
 			</actions>
 		</event>
@@ -361,21 +316,6 @@
 		<label>Delete Order</label>
 		<dataGroup>
 			<id>DataGroup_0</id>
-			<dataRef>
-				<id>boolean_0</id>
-				<logic>
-					<behavior>editable</behavior>
-				</logic>
-				<layout>
-					<x>0</x>
-					<y>0</y>
-					<rows>1</rows>
-					<cols>2</cols>
-					<offset>0</offset>
-					<template>material</template>
-					<appearance></appearance>
-				</layout>
-			</dataRef>
 		</dataGroup>
 	</transition>
 	<!-- PLACES -->

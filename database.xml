@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <document xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://modeler.netgrif.com/petriflow_schema.xsd">
-	<id>db_v10</id>
-	<initials>DB5</initials>
-	<title>db_v10</title>
+	<id>1_database</id>
+	<version>1.0.0</version>
+	<initials>DBA</initials>
+	<title>database_v1</title>
 	<defaultRole>true</defaultRole>
 	<transitionRole>false</transitionRole>
 	<!-- TRANSACTIONS -->
@@ -13,10 +14,9 @@
 		<title>Database</title>
 		<desc>Database of all users</desc>
 		<options>
-            <option key="test_key">kubo</option>
-			<option key="test_key2">patres</option>
-			<option key="test_key3">martin</option>
-			<option key="test_key4">david</option>
+            <option key="t">t</option>
+			<option key="xvavercak@stuba_sk">t</option>
+			<option key="xbilansky@stuba_sk">t</option>
         </options>
 	</data>
 	<data type="text">
