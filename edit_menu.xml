@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <document xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://modeler.netgrif.com/petriflow_schema.xsd">
-	<id>menu</id>
-	<initials>menu</initials>
-	<title>Menu</title>
+	<id>menu_v3</id>
+	<initials>MU3</initials>
+	<title>Menu v3</title>
 	<defaultRole>true</defaultRole>
 	<transitionRole>false</transitionRole>
 	<!-- TRANSACTIONS -->
@@ -18,12 +18,20 @@
 		<title>Price</title>
 		<desc>Price of the meal</desc>
 		<init>5</init>
+		<action trigger="set">
+			price: f.meal_price;
+			def pomPrice = price.value as Double;
+			if (0.0 > pomPrice) {
+				change price value {
+					return "0";
+				}
+			}
+		</action>
 	</data>
 	<data type="enumeration_map">
 		<id>menu_overview</id>
 		<title>Menu</title>
 		<desc>Menu overview</desc>
-		<!-- <init>option1</init> -->
 		<options>
         	<option key="Classical slovak dumplings">Meal: Classical slovak dumplings, Price: 5.00</option>
 			<option key="Fried cheese">Meal: Fried cheese, Price: 3.80</option>
@@ -33,19 +41,25 @@
 			<option key="Chicken Stroganov">Meal: Chicken Stroganov, Price: 6.10</option>
         </options>
 	</data>
+	<data type="taskRef">
+		<id>taskRef_0</id>
+		<title>set label</title>
+		<placeholder>placeholder</placeholder>
+		<desc>description</desc>
+		<init>value</init>
+	</data>
 	<!-- I18NS -->
 	<!-- TRANSITIONS -->
 	<transition>
 		<id>69</id>
-		<x>860</x>
-		<y>420</y>
+		<x>740</x>
+		<y>460</y>
 		<layout>
 			<offset>0</offset>
 		</layout>
 		<label>Add Meal</label>
 		<dataGroup>
 			<id>DataGroup_0</id>
-			<layout>grid</layout>
 			<dataRef>
 				<id>meal_name</id>
 				<logic>
@@ -86,11 +100,10 @@
 					menu: f.menu_overview;
 
 					def oldMenu = menu.options;
-					oldMenu.put(name.value,"Meal: " + name.value + " , Price: " + price.value);
+					oldMenu.put(name.value, "Meal: " + name.value + " , Price: " + price.value);
 					change menu options {
 						return oldMenu;
 					}
-
 				</action>
 			</actions>
 		</event>
@@ -102,25 +115,9 @@
 		<layout>
 			<offset>0</offset>
 		</layout>
-		<label>Change Menu</label>
+		<label>Edit Meal</label>
 		<dataGroup>
 			<id>DataGroup_0</id>
-			<layout>grid</layout>
-			<dataRef>
-				<id>menu_overview</id>
-				<logic>
-					<behavior>editable</behavior>
-				</logic>
-				<layout>
-					<x>0</x>
-					<y>1</y>
-					<rows>1</rows>
-					<cols>4</cols>
-					<offset>0</offset>
-					<template>material</template>
-					<appearance>outline</appearance>
-				</layout>
-			</dataRef>
 			<dataRef>
 				<id>meal_name</id>
 				<logic>
@@ -151,6 +148,22 @@
 					<appearance>outline</appearance>
 				</layout>
 			</dataRef>
+			<dataRef>
+				<id>taskRef_0</id>
+				<logic>
+					<behavior>editable</behavior>
+					<behavior>required</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>1</y>
+					<rows>1</rows>
+					<cols>4</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
 		</dataGroup>
 		<event type="finish">
 			<id>2_finish</id>
@@ -161,19 +174,62 @@
 					menu: f.menu_overview;
 
 					def oldMenu = menu.options;
-					<!-- Halusky : 4E -->
 					if (oldMenu.containsKey(name.value)) {
 						oldMenu.put(name.value,"Meal: " + name.value + " , Price: " + price.value);
 					}else{
 						oldMenu.remove(menu.value);
 						oldMenu.put(name.value,"Meal: " + name.value + " , Price: " + price.value);
 					}
+
 					change menu options {
-							return oldMenu;
-						} 
+						return oldMenu;
+					}
 				</action>
 			</actions>
 		</event>
+		<event type="assign">
+			<id>1_assign</id>
+			<actions phase="post">
+				<action trigger="set">
+					tref: f.taskRef_0;
+
+					def groupId = findCase{it.processIdentifier.eq("org_group").and(it.author.id.eq(loggedUser().id))}?.stringId
+					def menucase = findCase{it.processIdentifier.eq("${groupId}_menu_v3" as String)}
+					def task = findTask{it.caseId.eq(menucase.stringId).and(it.transitionId.eq("122"))}
+
+					change tref value {
+						return [task.stringId];
+					}
+				</action>
+			</actions>
+		</event>
+	</transition>
+	<transition>
+		<id>122</id>
+		<x>740</x>
+		<y>180</y>
+		<layout>
+			<offset>0</offset>
+		</layout>
+		<label>Show Menu</label>
+		<dataGroup>
+			<id>DataGroup_0</id>
+			<dataRef>
+				<id>menu_overview</id>
+				<logic>
+					<behavior>editable</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>1</y>
+					<rows>1</rows>
+					<cols>4</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+		</dataGroup>
 	</transition>
 	<!-- PLACES -->
 	<place>
@@ -186,25 +242,12 @@
 	</place>
 	<!-- ARCS -->
 	<arc>
-		<id>96</id>
-		<type>regular</type>
-		<sourceId>94</sourceId>
-		<destinationId>95</destinationId>
-		<multiplicity>1</multiplicity>
-	</arc>
-	<arc>
 		<id>108</id>
 		<type>regular</type>
 		<sourceId>94</sourceId>
 		<destinationId>69</destinationId>
 		<multiplicity>1</multiplicity>
-	</arc>
-	<arc>
-		<id>120</id>
-		<type>regular</type>
-		<sourceId>95</sourceId>
-		<destinationId>94</destinationId>
-		<multiplicity>1</multiplicity>
+		<breakPoint><x>760</x><y>383</y></breakPoint>
 	</arc>
 	<arc>
 		<id>121</id>
@@ -212,5 +255,22 @@
 		<sourceId>69</sourceId>
 		<destinationId>94</destinationId>
 		<multiplicity>1</multiplicity>
+		<breakPoint><x>718</x><y>382</y></breakPoint>
+	</arc>
+	<arc>
+		<id>127</id>
+		<type>regular</type>
+		<sourceId>94</sourceId>
+		<destinationId>95</destinationId>
+		<multiplicity>1</multiplicity>
+		<breakPoint><x>794</x><y>274</y></breakPoint>
+	</arc>
+	<arc>
+		<id>128</id>
+		<type>regular</type>
+		<sourceId>95</sourceId>
+		<destinationId>94</destinationId>
+		<multiplicity>1</multiplicity>
+		<breakPoint><x>792</x><y>319</y></breakPoint>
 	</arc>
 </document>
