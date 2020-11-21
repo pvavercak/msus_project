@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://modeler.netgrif.com/petriflow_schema.xsd">
+	<id>db_v10</id>
+	<initials>DB5</initials>
+	<title>db_v10</title>
+	<defaultRole>true</defaultRole>
+	<transitionRole>false</transitionRole>
+	<!-- TRANSACTIONS -->
+	<!-- ROLES -->
+	<!-- DATA -->
+	<data type="enumeration_map">
+		<id>enumeration_0</id>
+		<title>Database</title>
+		<desc>Database of all users</desc>
+		<options>
+            <option key="test_key">kubo</option>
+			<option key="test_key2">patres</option>
+			<option key="test_key3">martin</option>
+			<option key="test_key4">david</option>
+        </options>
+	</data>
+	<data type="text">
+		<id>text_0</id>
+		<title>Handler</title>
+		<placeholder>Handler</placeholder>
+		<desc>This is a field that adds data to db</desc>
+		<action trigger="set">
+			text : f.text_0,
+			database : f.enumeration_0;
+
+			def oldOptions = database.options;
+
+			def newData = text.value;
+			def tokens = newData.split(',');
+			
+            oldOptions.put(tokens[0], tokens[1]);
+
+            change database options {
+                return oldOptions;
+            }
+		</action>
+		<init>value</init>
+	</data>
+	<!-- I18NS -->
+	<!-- TRANSITIONS -->
+	<transition>
+		<id>1</id>
+		<x>500</x>
+		<y>195</y>
+		<layout>
+			<offset>0</offset>
+		</layout>
+		<label></label>
+		<assignPolicy>auto</assignPolicy>
+		<finishPolicy>auto_no_data</finishPolicy>
+		<dataGroup>
+			<id>DataGroup_0</id>
+			<dataRef>
+				<id>enumeration_0</id>
+				<logic>
+					<behavior>editable</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>0</y>
+					<rows>1</rows>
+					<cols>4</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>text_0</id>
+				<logic>
+					<behavior>visible</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>1</y>
+					<rows>1</rows>
+					<cols>1</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+		</dataGroup>
+	</transition>
+	<!-- PLACES -->
+	<!-- ARCS -->
+</document>

@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <document xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://modeler.netgrif.com/petriflow_schema.xsd">
-	<id>new_model</id>
+	<id>add_person_test</id>
 	<version>1.0.0</version>
-	<initials>NEW</initials>
-	<title>New Model</title>
+	<initials>APT</initials>
+	<title>Add Person Test3</title>
 	<icon>home</icon>
 	<defaultRole>true</defaultRole>
 	<transitionRole>false</transitionRole>
@@ -11,24 +11,24 @@
 	<!-- ROLES -->
 	<!-- DATA -->
 	<data type="text">
-		<id>text_5</id>
+		<id>uname</id>
 		<title>First and Last Name</title>
 		<desc>Fill in name of a new user</desc>
 		<init>value</init>
 	</data>
 	<data type="text">
-		<id>text_6</id>
+		<id>email</id>
 		<title>Email</title>
 		<desc>Fill in email address</desc>
 		<init>example@mail.com</init>
 	</data>
 	<data type="text">
-		<id>text_7</id>
+		<id>password</id>
 		<title>Password</title>
 		<desc>Choose a strong password</desc>
 	</data>
 	<data type="enumeration">
-		<id>enumeration_6</id>
+		<id>employment</id>
 		<title>Employment Type</title>
 		<desc>Choose a type of employee's contract</desc>
 		<values>FULL-TIME</values>
@@ -43,6 +43,28 @@
 		<desc>description</desc>
 		<init>value</init>
 	</data>
+	<data type="button">
+		<id>button_0</id>
+		<title>Add</title>
+		<placeholder>Add User</placeholder>
+		<action trigger="set">
+			email : f.email,
+			passwd : f.password;
+
+			def groupId = findCase{it.processIdentifier.eq("org_group").and(it.author.id.eq(loggedUser().id))}?.stringId;
+			def dbcase = findCase{it.processIdentifier.eq("${groupId}_db_v10" as String)};
+			def task = findTask{it.caseId.eq(dbcase.stringId) &amp; it.transitionId.eq("1")};
+
+			def emailReplaced = email.value;
+			def messageBuilder = emailReplaced.replaceAll(/\./, "_") + "," + passwd.value;
+			setData(task, [
+                "text_0": [
+                    "value": messageBuilder as String,
+                    "type": "text"
+                ]
+			]);
+		</action>
+	</data>
 	<!-- I18NS -->
 	<!-- TRANSITIONS -->
 	<transition>
@@ -54,10 +76,42 @@
 		</layout>
 		<label>Add Person</label>
 		<dataGroup>
-			<id>DataGroup_0</id>
+			<id>DataGroup_1</id>
 			<layout>grid</layout>
 			<dataRef>
-				<id>text_5</id>
+				<id>taskRef_0</id>
+				<logic>
+					<behavior>editable</behavior>
+				</logic>
+				<layout>
+					<x>2</x>
+					<y>3</y>
+					<rows>1</rows>
+					<cols>2</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>button_0</id>
+				<logic>
+					<behavior>editable</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>3</y>
+					<rows>1</rows>
+					<cols>2</cols>
+					<offset>0</offset>
+					<template>material</template>
+				</layout>
+			</dataRef>
+		</dataGroup>
+		<dataGroup>
+			<id>DataGroup_0</id>
+			<dataRef>
+				<id>uname</id>
 				<logic>
 					<behavior>editable</behavior>
 				</logic>
@@ -72,7 +126,7 @@
 				</layout>
 			</dataRef>
 			<dataRef>
-				<id>text_6</id>
+				<id>email</id>
 				<logic>
 					<behavior>editable</behavior>
 				</logic>
@@ -87,7 +141,7 @@
 				</layout>
 			</dataRef>
 			<dataRef>
-				<id>text_7</id>
+				<id>password</id>
 				<logic>
 					<behavior>editable</behavior>
 				</logic>
@@ -102,7 +156,7 @@
 				</layout>
 			</dataRef>
 			<dataRef>
-				<id>enumeration_6</id>
+				<id>employment</id>
 				<logic>
 					<behavior>editable</behavior>
 				</logic>
@@ -116,22 +170,24 @@
 					<appearance>outline</appearance>
 				</layout>
 			</dataRef>
-			<dataRef>
-				<id>taskRef_0</id>
-				<logic>
-					<behavior>editable</behavior>
-				</logic>
-				<layout>
-					<x>0</x>
-					<y>4</y>
-					<rows>1</rows>
-					<cols>4</cols>
-					<offset>0</offset>
-					<template>material</template>
-					<appearance>outline</appearance>
-				</layout>
-			</dataRef>
 		</dataGroup>
+		<event type="assign">
+            <id>2_assign</id>
+            <actions phase="post">
+                <action>
+                    uname : f.uname,
+					email : f.email,
+					tref : f.taskRef_0,
+					passwd : f.password;
+					def groupId = findCase{it.processIdentifier.eq("org_group").and(it.author.id.eq(loggedUser().id))}?.stringId
+					def dbcase = findCase{it.processIdentifier.eq("${groupId}_db_v10" as String)}
+					def task = findTask{it.caseId.eq(dbcase.stringId) &amp; it.transitionId.eq("1")}
+					change tref value {
+						return [task.stringId]
+					}
+                </action>
+            </actions>
+        </event>
 	</transition>
 	<!-- PLACES -->
 	<place>
