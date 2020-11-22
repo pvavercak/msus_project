@@ -1,0 +1,661 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://modeler.netgrif.com/petriflow_schema.xsd">
+	<id>3_login</id>
+	<version>3.0.0</version>
+	<initials>LO3</initials>
+	<title>Login v3</title>
+	<defaultRole>true</defaultRole>
+	<transitionRole>false</transitionRole>
+	<!-- TRANSACTIONS -->
+	<!-- ROLES -->
+	<!-- DATA -->
+	<data type="text">
+		<id>email_field</id>
+		<title>Email</title>
+		<desc>Enter your email address</desc>
+		<init>example@mail.com</init>
+	</data>
+	<data type="text">
+		<id>passwd_field</id>
+		<title>Password</title>
+		<desc>Enter a password</desc>
+	</data>
+	<data type="enumeration">
+		<id>enumeration_0</id>
+		<title>Day of the week</title>
+		<desc>Choose a day of this week</desc>
+		<action trigger="get">
+			daysChoice: f.this;
+
+			def dowArray = [
+				"Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"
+			]
+			
+			change daysChoice choices {
+				return [];
+			}
+
+			def today = new Date();
+			def indexToday = (today.getDay() >= 5) ? 0 : today.getDay();
+			for(int i = indexToday + 1; i &lt; 6; ++i) {
+				change daysChoice choices {
+					return daysChoice.choices + [dowArray[i]];
+				}
+			}
+		</action>
+		<action trigger="set">
+			performOrder: f.4002,
+			addingOrder: f.4003,
+			outputik2: f.text_2,
+			dayOrder: f.this,
+			outputik: f.email_field,
+			alreadyOrdered: f.already_ordered_taskref;
+
+			def dowArray = [
+				"Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"
+			]
+
+			def today = new Date();
+			def indexSelected = dowArray.findIndexOf{ it == (dayOrder.value as String) };
+			def indexToday = today.getDay();
+
+			def currentOrderDate = null;
+			if (0 > (indexSelected - indexToday)) {
+				currentOrderDate = today.plus(7 - Math.abs(indexSelected - indexToday));
+			} else {
+				currentOrderDate = today.plus(Math.abs(indexSelected - indexToday));
+			}
+			
+			def groupId = findCase{it.processIdentifier.eq("org_group").and(it.author.id.eq(loggedUser().id))}?.stringId;
+			def tasks = findTasks{it.caseId.eq(useCase.stringId as String).and(it.transitionId.eq("34"))};
+
+			change performOrder value {
+				return "10";
+			}
+			change addingOrder value {
+				return "1";
+			}
+			for(task in tasks) {
+				def data = getData(task);
+				if (data.containsKey("date_1")) {
+
+					def dayInTask = data["date_1"].value.getDayOfWeek().toString().toLowerCase();
+					def indexDayInTask = dowArray.findIndexOf{ it.toLowerCase() == dayInTask };
+					def indexCurr = currentOrderDate.getDay();
+
+					if ( indexDayInTask == indexCurr ) {
+						change alreadyOrdered value {
+							return [task.stringId];
+						}
+						change performOrder value {
+							return "1";
+						}
+						change addingOrder value {
+							return "0";
+						}
+						change outputik value {
+							return "Martin pije kavicku";
+						}
+						break;
+					} else {
+						change outputik value {
+							return indexCurr as String;
+						}
+						change outputik2 value {
+							return indexDayInTask as String;
+						}
+					}
+				} 
+			}
+		</action>
+	</data>
+	<data type="taskRef">
+		<id>taskRef_0</id>
+		<title>set label</title>
+		<placeholder>placeholder</placeholder>
+		<desc>description</desc>
+		<init>value</init>
+	</data>
+	<data type="date">
+		<id>date_1</id>
+		<title>Date</title>
+		<desc>Meal order date</desc>
+		<action trigger="get">
+			dateField: f.this,
+			mealOrdered: f.text_2,
+			dayOrder: f.enumeration_0;
+
+			def dowArray = [
+				"Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"
+			]
+
+			def today = new Date();
+			def indexSelected = dowArray.findIndexOf{ it == (dayOrder.value as String) };
+			def indexToday = today.getDay();
+
+			change dateField value {
+				if (0 > (indexSelected - indexToday)) {
+					return today.plus(7 - Math.abs(indexSelected - indexToday));
+				}
+				return today.plus(Math.abs(indexSelected - indexToday));
+			}
+		</action>
+	</data>
+	<data type="text">
+		<id>text_2</id>
+		<title>Meal</title>
+		<desc>Name of chosen meal</desc>
+		<init>value</init>
+		<action trigger="get">
+			<!-- @formatter:off -->
+			<!-- thisData: f.this,
+			order: f.enumeration_1;
+
+			change thisData value {
+				return order.value as String;
+			} -->
+			<!-- @formatter:on -->
+		</action>
+	</data>
+	<data type="number">
+		<id>4000</id>
+		<title>On login success</title>
+		<desc>succ</desc>
+		<init>1</init>
+	</data>
+	<data type="number">
+		<id>4001</id>
+		<title>On login failed</title>
+		<desc>fail</desc>
+		<init>0</init>
+	</data>
+	<data type="enumeration">
+		<id>enumeration_1</id>
+		<title>Today's Offer</title>
+		<desc>Meals you can order for this day</desc>
+		<action trigger="get">
+			<!-- @formatter:off -->
+			newMenu: f.this;
+
+			def groupId = findCase{it.processIdentifier.eq("org_group").and(it.author.id.eq(loggedUser().id))}?.stringId;
+			def menucase = findCase{it.processIdentifier.eq("${groupId}_1_menu" as String)};
+
+			def data = getData("122", menucase);
+			def menu = data["menu_overview"].options;
+
+			change newMenu choices {
+				return [];
+			}
+
+			for(entry in menu) {
+				change newMenu choices {
+					return newMenu.choices + [entry.getValue()];
+				}
+			}
+			<!-- @formatter:on -->
+		</action>
+	</data>
+	<data type="number" immediate="false">
+		<id>4002</id>
+		<title>Perform delete order</title>
+		<placeholder>0</placeholder>
+		<desc>This variable is set to 1 when already ordered for the day</desc>
+		<init>10</init>
+	</data>
+	<data type="taskRef">
+		<id>already_ordered_taskref</id>
+		<title>Already ordered today</title>
+		<placeholder>You have ordered no meal for this day</placeholder>
+		<desc>A meal you have ordered will be displayed heere</desc>
+	</data>
+	<data type="number">
+		<id>4003</id>
+		<title>Adding Order</title>
+		<desc>This will be set to 0 in case you are editing today's order</desc>
+		<init>1</init>
+	</data>
+	<!-- I18NS -->
+	<!-- TRANSITIONS -->
+	<transition>
+		<id>2</id>
+		<x>220</x>
+		<y>220</y>
+		<layout>
+			<offset>0</offset>
+		</layout>
+		<label>Log In</label>
+		<icon>login</icon>
+		<dataGroup>
+			<id>DataGroup_0</id>
+			<dataRef>
+				<id>email_field</id>
+				<logic>
+					<behavior>editable</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>0</y>
+					<rows>1</rows>
+					<cols>4</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>passwd_field</id>
+				<logic>
+					<behavior>editable</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>1</y>
+					<rows>1</rows>
+					<cols>4</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+		</dataGroup>
+		<event type="finish">
+			<id>2_finish</id>
+			<actions phase="pre">
+				<action trigger="set">
+					<!-- @formatter:off -->
+					success : f.4000,
+					fail : f.4001,
+					email : f.email_field,
+					passwd : f.passwd_field;
+
+					def groupId = findCase{it.processIdentifier.eq("org_group").and(it.author.id.eq(loggedUser().id))}?.stringId;
+					def dbcase = findCase{it.processIdentifier.eq("${groupId}_1_database" as String)};
+					def task = findTask{it.caseId.eq(dbcase.stringId) &amp; it.transitionId.eq("1")};
+
+					def data = getData(task);
+					def database = data["enumeration_0"].options;
+
+					change success value {
+						return 1;
+					};
+					change fail value {
+						return 0;
+					};
+
+					def emailProcessed = email.value.replaceAll(/\./, '_');
+					if (!database.containsKey(emailProcessed)) {
+						change fail value {
+							return 1;
+						};
+						change success value {
+							return 0;
+						};
+					} else if (!database.get(emailProcessed).equals(passwd.value)) {
+						change fail value {
+							return 1;
+						};
+						change success value {
+							return 0;
+						};
+					}
+					<!-- @formatter:on -->
+                </action>
+			</actions>
+		</event>
+	</transition>
+	<transition>
+		<id>6</id>
+		<x>380</x>
+		<y>340</y>
+		<layout>
+			<offset>0</offset>
+		</layout>
+		<label>Choose Day</label>
+		<icon>calendar_today</icon>
+		<dataGroup>
+			<id>DataGroup_0</id>
+			<dataRef>
+				<id>enumeration_0</id>
+				<logic>
+					<behavior>editable</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>0</y>
+					<rows>2</rows>
+					<cols>4</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>already_ordered_taskref</id>
+				<logic>
+					<behavior>editable</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>2</y>
+					<rows>2</rows>
+					<cols>4</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+		</dataGroup>
+		<!-- new org.bson.types.ObjectId(String) -->
+	</transition>
+	<transition>
+		<id>26</id>
+		<x>700</x>
+		<y>340</y>
+		<layout>
+			<offset>0</offset>
+		</layout>
+		<label>Order Meal</label>
+		<icon>list</icon>
+		<dataGroup>
+			<id>DataGroup_0</id>
+			<dataRef>
+				<id>enumeration_1</id>
+				<logic>
+					<behavior>editable</behavior>
+					<behavior>required</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>0</y>
+					<rows>3</rows>
+					<cols>4</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+		</dataGroup>
+	</transition>
+	<transition>
+		<id>34</id>
+		<x>820</x>
+		<y>580</y>
+		<layout>
+			<offset>0</offset>
+		</layout>
+		<label>Order Status</label>
+		<icon>assessment</icon>
+		<dataGroup>
+			<id>DataGroup_0</id>
+			<dataRef>
+				<id>email_field</id>
+				<logic>
+					<behavior>visible</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>0</y>
+					<rows>2</rows>
+					<cols>2</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>date_1</id>
+				<logic>
+					<behavior>visible</behavior>
+				</logic>
+				<layout>
+					<x>2</x>
+					<y>0</y>
+					<rows>2</rows>
+					<cols>2</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>text_2</id>
+				<logic>
+					<behavior>visible</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>2</y>
+					<rows>2</rows>
+					<cols>4</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+		</dataGroup>
+	</transition>
+	<transition>
+		<id>40</id>
+		<x>220</x>
+		<y>580</y>
+		<layout>
+			<offset>0</offset>
+		</layout>
+		<label>Cancel</label>
+		<icon>cancel</icon>
+	</transition>
+	<transition>
+		<id>63</id>
+		<x>60</x>
+		<y>340</y>
+		<layout>
+			<offset>0</offset>
+		</layout>
+		<label>Log Out</label>
+		<icon>lock</icon>
+	</transition>
+	<transition>
+		<id>69</id>
+		<x>380</x>
+		<y>220</y>
+		<layout>
+			<offset>0</offset>
+		</layout>
+		<label>Delete Order</label>
+		<icon>delete_forever</icon>
+		<dataGroup>
+			<id>DataGroup_0</id>
+		</dataGroup>
+	</transition>
+	<transition>
+		<id>78</id>
+		<x>380</x>
+		<y>460</y>
+		<layout>
+			<offset>0</offset>
+		</layout>
+		<label>Confirm</label>
+		<icon>check</icon>
+	</transition>
+	<!-- PLACES -->
+	<place>
+		<id>1</id>
+		<x>60</x>
+		<y>220</y>
+		<label>Login Page</label>
+		<tokens>1</tokens>
+		<static>false</static>
+	</place>
+	<place>
+		<id>4</id>
+		<x>220</x>
+		<y>340</y>
+		<label>Logged</label>
+		<tokens>0</tokens>
+		<static>false</static>
+	</place>
+	<place>
+		<id>8</id>
+		<x>540</x>
+		<y>340</y>
+		<label>Day Selected</label>
+		<tokens>0</tokens>
+		<static>false</static>
+	</place>
+	<place>
+		<id>22</id>
+		<x>700</x>
+		<y>580</y>
+		<label>Order Entered</label>
+		<tokens>0</tokens>
+		<static>false</static>
+	</place>
+	<place>
+		<id>77</id>
+		<x>540</x>
+		<y>460</y>
+		<label></label>
+		<tokens>0</tokens>
+		<static>false</static>
+	</place>
+	<!-- ARCS -->
+	<arc>
+		<id>7</id>
+		<type>regular</type>
+		<sourceId>4</sourceId>
+		<destinationId>6</destinationId>
+		<multiplicity>1</multiplicity>
+	</arc>
+	<arc>
+		<id>27</id>
+		<type>regular</type>
+		<sourceId>8</sourceId>
+		<destinationId>26</destinationId>
+		<multiplicity>1</multiplicity>
+	</arc>
+	<arc>
+		<id>41</id>
+		<type>regular</type>
+		<sourceId>22</sourceId>
+		<destinationId>40</destinationId>
+		<multiplicity>1</multiplicity>
+	</arc>
+	<arc>
+		<id>52</id>
+		<type>regular</type>
+		<sourceId>40</sourceId>
+		<destinationId>4</destinationId>
+		<multiplicity>1</multiplicity>
+	</arc>
+	<arc>
+		<id>61</id>
+		<type>regular</type>
+		<sourceId>6</sourceId>
+		<destinationId>8</destinationId>
+		<multiplicity>1</multiplicity>
+	</arc>
+	<arc>
+		<id>65</id>
+		<type>regular</type>
+		<sourceId>4</sourceId>
+		<destinationId>63</destinationId>
+		<multiplicity>1</multiplicity>
+	</arc>
+	<arc>
+		<id>66</id>
+		<type>reset</type>
+		<sourceId>4</sourceId>
+		<destinationId>63</destinationId>
+		<multiplicity>1</multiplicity>
+	</arc>
+	<arc>
+		<id>67</id>
+		<type>variable</type>
+		<sourceId>26</sourceId>
+		<destinationId>22</destinationId>
+		<multiplicity>4003</multiplicity>
+	</arc>
+	<arc>
+		<id>70</id>
+		<type>variable</type>
+		<sourceId>8</sourceId>
+		<destinationId>69</destinationId>
+		<multiplicity>4002</multiplicity>
+		<breakPoint><x>540</x><y>220</y></breakPoint>
+	</arc>
+	<arc>
+		<id>72</id>
+		<type>regular</type>
+		<sourceId>69</sourceId>
+		<destinationId>4</destinationId>
+		<multiplicity>1</multiplicity>
+	</arc>
+	<arc>
+		<id>73</id>
+		<type>regular</type>
+		<sourceId>1</sourceId>
+		<destinationId>2</destinationId>
+		<multiplicity>1</multiplicity>
+	</arc>
+	<arc>
+		<id>74</id>
+		<type>variable</type>
+		<sourceId>2</sourceId>
+		<destinationId>4</destinationId>
+		<multiplicity>4000</multiplicity>
+	</arc>
+	<arc>
+		<id>75</id>
+		<type>variable</type>
+		<sourceId>2</sourceId>
+		<destinationId>1</destinationId>
+		<multiplicity>4001</multiplicity>
+		<breakPoint><x>220</x><y>180</y></breakPoint>
+		<breakPoint><x>60</x><y>180</y></breakPoint>
+	</arc>
+	<arc>
+		<id>76</id>
+		<type>regular</type>
+		<sourceId>63</sourceId>
+		<destinationId>1</destinationId>
+		<multiplicity>1</multiplicity>
+	</arc>
+	<arc>
+		<id>80</id>
+		<type>regular</type>
+		<sourceId>26</sourceId>
+		<destinationId>77</destinationId>
+		<multiplicity>1</multiplicity>
+		<breakPoint><x>700</x><y>460</y></breakPoint>
+	</arc>
+	<arc>
+		<id>82</id>
+		<type>regular</type>
+		<sourceId>77</sourceId>
+		<destinationId>40</destinationId>
+		<multiplicity>1</multiplicity>
+		<breakPoint><x>540</x><y>580</y></breakPoint>
+	</arc>
+	<arc>
+		<id>83</id>
+		<type>regular</type>
+		<sourceId>77</sourceId>
+		<destinationId>78</destinationId>
+		<multiplicity>1</multiplicity>
+	</arc>
+	<arc>
+		<id>84</id>
+		<type>regular</type>
+		<sourceId>78</sourceId>
+		<destinationId>4</destinationId>
+		<multiplicity>1</multiplicity>
+		<breakPoint><x>220</x><y>460</y></breakPoint>
+	</arc>
+	<arc>
+		<id>85</id>
+		<type>read</type>
+		<sourceId>22</sourceId>
+		<destinationId>34</destinationId>
+		<multiplicity>1</multiplicity>
+	</arc>
+</document>
