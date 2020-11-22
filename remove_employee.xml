@@ -1,53 +1,44 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <document xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://modeler.netgrif.com/petriflow_schema.xsd">
-	<id>1_add_person</id>
+	<id>remove_employee</id>
 	<version>1.0.0</version>
-	<initials>ADP</initials>
-	<title>Add Person v1</title>
+	<initials>RME</initials>
+	<title>Remove Employee</title>
 	<icon>home</icon>
 	<defaultRole>true</defaultRole>
 	<transitionRole>false</transitionRole>
 	<!-- TRANSACTIONS -->
 	<!-- ROLES -->
 	<!-- DATA -->
-	<data type="text">
-		<id>email</id>
-		<title>Email</title>
-		<desc>Fill in email address</desc>
-		<init>example@mail.com</init>
+	<data type="enumeration_map">
+		<id>database</id>
+		<title>Database</title>
+		<desc>Database of all users</desc>
+		<options>
+        </options>
 	</data>
-	<data type="text">
-		<id>password</id>
-		<title>Password</title>
-		<desc>Choose a strong password</desc>
-	</data>
-	<data type="taskRef">
-        <id>db_ref</id>
-        <title>Database</title>
-    </data>
 	<data type="button">
 		<id>button_0</id>
-		<title>Add Employee</title>
+		<title>Remove Employee</title>
 		<action trigger="set">
-			email : f.email,
-			passwd : f.password,
-			tref : f.db_ref;
+			db: f.database,
+			test: f.test;
 
 			def groupId = findCase{it.processIdentifier.eq("org_group").and(it.author.id.eq(loggedUser().id))}?.stringId;
 			def dbcase = findCase{it.processIdentifier.eq("${groupId}_1_database" as String)};
 			def task = findTask{it.caseId.eq(dbcase.stringId) &amp; it.transitionId.eq("1")};
-
-			def emailReplaced = email.value;
-			def messageBuilder = emailReplaced.replaceAll(/\./, "_") + "," + passwd.value;
+			
 			setData(task, [
-                "add_handler": [
-                    "value": messageBuilder as String,
+                "remove_handler": [
+                    "value": db.value,
                     "type": "text"
                 ]
 			]);
-					
-			change tref value {
-				return [task.stringId]
+
+			def data = getData(task);
+
+			change db options {
+				return data["enumeration_0"].options;
 			}
 		</action>
 	</data>
@@ -60,50 +51,20 @@
 		<layout>
 			<offset>0</offset>
 		</layout>
-		<label>Add Person</label>
-		<assignPolicy>auto</assignPolicy>
+		<label>Remove Employee</label>
 		<dataGroup>
 			<id>DataGroup_0</id>
+			<layout>grid</layout>
 			<dataRef>
-				<id>db_ref</id>
+				<id>database</id>
 				<logic>
 					<behavior>editable</behavior>
 				</logic>
 				<layout>
 					<x>0</x>
-					<y>1</y>
+					<y>0</y>
 					<rows>1</rows>
 					<cols>4</cols>
-					<offset>0</offset>
-					<template>material</template>
-					<appearance>outline</appearance>
-				</layout>
-			</dataRef>
-			<dataRef>
-				<id>email</id>
-				<logic>
-					<behavior>editable</behavior>
-				</logic>
-				<layout>
-					<x>0</x>
-					<y>2</y>
-					<rows>1</rows>
-					<cols>2</cols>
-					<offset>0</offset>
-					<template>material</template>
-					<appearance>outline</appearance>
-				</layout>
-			</dataRef>
-			<dataRef>
-				<id>password</id>
-				<logic>
-					<behavior>editable</behavior>
-				</logic>
-				<layout>
-					<x>2</x>
-					<y>2</y>
-					<rows>1</rows>
-					<cols>2</cols>
 					<offset>0</offset>
 					<template>material</template>
 					<appearance>outline</appearance>
@@ -116,7 +77,7 @@
 				</logic>
 				<layout>
 					<x>0</x>
-					<y>3</y>
+					<y>1</y>
 					<rows>1</rows>
 					<cols>2</cols>
 					<offset>0</offset>
@@ -128,14 +89,16 @@
             <id>2_assign</id>
             <actions phase="post">
                 <action>
-					tref: f.db_ref;
+					db: f.database;
 
 					def groupId = findCase{it.processIdentifier.eq("org_group").and(it.author.id.eq(loggedUser().id))}?.stringId
 					def dbcase = findCase{it.processIdentifier.eq("${groupId}_1_database" as String)}
 					def task = findTask{it.caseId.eq(dbcase.stringId) &amp; it.transitionId.eq("1")}
 
-					change tref value {
-						return [task.stringId]
+                    def data = getData(task);
+
+					change db options {
+						return data["enumeration_0"].options;
 					}
                 </action>
             </actions>

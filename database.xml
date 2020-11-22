@@ -20,23 +20,44 @@
         </options>
 	</data>
 	<data type="text">
-		<id>text_0</id>
-		<title>Handler</title>
+		<id>add_handler</id>
+		<title>Handler for adding</title>
 		<placeholder>Handler</placeholder>
 		<desc>This is a field that adds data to db</desc>
 		<action trigger="set">
-			text : f.text_0,
+			text : f.add_handler,
 			database : f.enumeration_0;
 
-			def oldOptions = database.options;
+			def entries = database.options;
 
 			def newData = text.value;
 			def tokens = newData.split(',');
 			
-            oldOptions.put(tokens[0], tokens[1]);
+            entries.put(tokens[0], newData);
 
             change database options {
-                return oldOptions;
+                return entries;
+            }
+		</action>
+		<init>value</init>
+	</data>
+	<data type="text">
+		<id>remove_handler</id>
+		<title>Handler for removing</title>
+		<placeholder>Handler</placeholder>
+		<desc>This is a field that removes data from db</desc>
+		<action trigger="set">
+			text : f.this,
+			database : f.enumeration_0;
+
+			def entries = database.options;
+
+			def newData = text.value;
+			
+            entries.remove(newData);
+
+            change database options {
+                return entries;
             }
 		</action>
 		<init>value</init>
@@ -71,12 +92,27 @@
 				</layout>
 			</dataRef>
 			<dataRef>
-				<id>text_0</id>
+				<id>add_handler</id>
 				<logic>
-					<behavior>visible</behavior>
+					<behavior>hidden</behavior>
 				</logic>
 				<layout>
 					<x>0</x>
+					<y>1</y>
+					<rows>1</rows>
+					<cols>1</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>remove_handler</id>
+				<logic>
+					<behavior>hidden</behavior>
+				</logic>
+				<layout>
+					<x>2</x>
 					<y>1</y>
 					<rows>1</rows>
 					<cols>1</cols>
