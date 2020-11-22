@@ -24,6 +24,21 @@
 		<id>enumeration_0</id>
 		<title>Day of the week</title>
 		<desc>Choose a day of this week</desc>
+		<action trigger="get">
+			daysChoice: f.this;
+
+			def dowArray = [
+				"Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"
+			]
+			
+			def today = new Date();
+			def indexToday = (today.getDay() >= 5) ? 0 : today.getDay();
+			for(int i = indexToday + 1; i &lt; 6; ++i) {
+				change daysChoice choices {
+					return daysChoice.choices + [dowArray[i]];
+				}
+			}
+		</action>
 	</data>
 	<data type="taskRef">
 		<id>taskRef_0</id>
@@ -36,12 +51,40 @@
 		<id>date_1</id>
 		<title>Date</title>
 		<desc>Meal order date</desc>
+		<action trigger="get">
+			dateField: f.this,
+			mealOrdered: f.text_2,
+			dayOrder: f.enumeration_0;
+
+			def dowArray = [
+				"Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"
+			]
+
+			def today = new Date();
+			def indexSelected = dowArray.findIndexOf{ it == (dayOrder.value as String) };
+			def indexToday = today.getDay();
+
+			change dateField value {
+				if (0 > (indexSelected - indexToday)) {
+					return today.plus(7 - Math.abs(indexSelected - indexToday));
+				}
+				return today.plus(Math.abs(indexSelected - indexToday));
+			}
+		</action>
 	</data>
 	<data type="text">
 		<id>text_2</id>
 		<title>Meal</title>
 		<desc>Name of chosen meal</desc>
 		<init>value</init>
+		<action trigger="get">
+			thisData: f.this,
+			order: f.enumeration_1;
+
+			change thisData value {
+				return order.value as String;
+			}
+		</action>
 	</data>
 	<data type="number">
 		<id>4000</id>
@@ -59,6 +102,25 @@
 		<id>enumeration_1</id>
 		<title>Today's Offer</title>
 		<desc>Meals you can order for this day</desc>
+		<action trigger="get">
+			newMenu: f.this;
+
+			def groupId = findCase{it.processIdentifier.eq("org_group").and(it.author.id.eq(loggedUser().id))}?.stringId;
+			def menucase = findCase{it.processIdentifier.eq("${groupId}_1_menu" as String)};
+
+			def data = getData("122", menucase);
+			def menu = data["menu_overview"].options;
+
+			change newMenu choices {
+				return [];
+			}
+
+			for(entry in menu) {
+				change newMenu choices {
+					return newMenu.choices + [entry.getValue()];
+				}
+			}
+		</action>
 	</data>
 	<!-- I18NS -->
 	<!-- TRANSITIONS -->
@@ -172,26 +234,6 @@
 				</layout>
 			</dataRef>
 		</dataGroup>
-		<event type="assign">
-			<id>1_assign</id>
-			<actions phase="pre">
-				<action>
-					daysChoice: f.enumeration_0;
-
-					def dowArray = [
-						"Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"
-					]
-					
-					def today = new Date();
-					def indexToday = (today.getDay() >= 5) ? 0 : today.getDay();
-					for(int i = indexToday + 1; i &lt; 6; ++i) {
-						change daysChoice choices {
-							return daysChoice.choices + [dowArray[i]];
-						}
-					}
-				</action>
-			</actions>
-		</event>
 	</transition>
 	<transition>
 		<id>26</id>
@@ -220,30 +262,6 @@
 				</layout>
 			</dataRef>
 		</dataGroup>
-		<event type="assign">
-			<id>1_assign</id>
-			<actions phase="post">
-				<action>
-					newMenu: f.enumeration_1;
-
-					def groupId = findCase{it.processIdentifier.eq("org_group").and(it.author.id.eq(loggedUser().id))}?.stringId;
-					def menucase = findCase{it.processIdentifier.eq("${groupId}_1_menu" as String)};
-
-					def data = getData("122", menucase);
-					def menu = data["menu_overview"].options;
-					
-					change newMenu choices {
-						return [];
-					}
-
-					for(entry in menu) {
-						change newMenu choices {
-							return newMenu.choices + [entry.getValue()];
-						}
-					}
-				</action>
-			</actions>
-		</event>
 	</transition>
 	<transition>
 		<id>34</id>
@@ -288,7 +306,7 @@
 			<dataRef>
 				<id>text_2</id>
 				<logic>
-					<behavior>editable</behavior>
+					<behavior>visible</behavior>
 				</logic>
 				<layout>
 					<x>0</x>
@@ -301,34 +319,6 @@
 				</layout>
 			</dataRef>
 		</dataGroup>
-		<event type="assign">
-			<id>1_assign</id>
-			<actions phase="pre">
-				<action>
-					dateField: f.date_1,
-					outputis: f.text_2,
-					chs: f.enumeration_0,
-					newMenu: f.enumeration_1;
-					
-					def dowArray = [
-						"Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"
-					]
-					
-					def today = new Date();
-					def indexSelected = dowArray.findIndexOf{ it == (chs.value as String) };
-					def indexToday = today.getDay();
-					change dateField value {
-						if (0 > (indexSelected - indexToday)) {
-							return today.plus(7 - Math.abs(indexSelected - indexToday));
-						}
-						return today.plus(Math.abs(indexSelected - indexToday));
-					}
-					change outputis value {
-						return indexSelected + " - " + indexToday;
-					}
-				</action>
-			</actions>
-		</event>
 	</transition>
 	<transition>
 		<id>40</id>
