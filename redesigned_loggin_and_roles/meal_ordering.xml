@@ -24,6 +24,45 @@
 		<options>
 			<!-- <option key="vdkj">4515,rezen,5.80</option> -->
 		</options>
+		<action trigger="get">
+			originalOrders: f.order_history,
+			orders : f.this;
+
+			def userSystemId = userService.loggedUser.email as String;
+
+			def allOrders = originalOrders.options;
+			def filteredOrders = new LinkedHashMap();
+			
+			for(entry in allOrders) {
+				def entryValue = entry.getValue() as String;
+				def tokens = entryValue.split(',');
+				if (tokens[0].equals(userSystemId)){
+					filteredOrders.put(entry.key,entryValue);
+				}
+			}
+
+			change orders options {
+				return filteredOrders;
+			} 
+		</action>
+	</data>
+	<data type="enumeration_map">
+		<id>order_history_visible</id>
+		<title>Order History</title>
+		<desc>History of all orders for this week</desc>
+		<options>
+			<!-- <option key="vdkj">4515,rezen,5.80</option> -->
+		</options>
+		<action trigger="get">
+			originalOrders: f.order_history,
+			orders : f.this;
+
+			def oroptions = originalOrders.options;
+
+			change orders options {
+				return oroptions;
+			} 
+		</action>
 	</data>
 	<data type="enumeration">
 		<id>menu</id>
@@ -136,6 +175,90 @@
 		<desc>This value will be 1 in case order to delete exists</desc>
 		<init>5</init>
 	</data>
+	<data type="date">
+		<id>date_from</id>
+		<title>From</title>
+		<placeholder>placeholder</placeholder>
+		<desc>Select start date</desc>
+		<action trigger="set">
+			fromDate: f.date_from,
+			toDate: f.date_to,
+			originalOrders: f.order_history,
+			orders: f.order_history_visible;
+
+			def allOrders = originalOrders.options;
+			def filteredOrders = new LinkedHashMap();
+			
+			for(entry in allOrders) {
+				def valid = true;
+				def entryValue = entry.getValue() as String;
+				def tokens = entryValue.split(',');
+
+				def formatter = java.time.format.DateTimeFormatter.ofPattern("dd.MM.yyyy");
+				def df = tokens[1].replaceAll("\\s","");
+				def datelimit = java.time.LocalDate.parse(df, formatter);
+				if (fromDate.value != null){
+					if (datelimit.isBefore(fromDate.value)){
+						valid = false;
+					}
+				}
+				if (toDate.value != null){
+					if (datelimit.isAfter(toDate.value)){
+						valid = false;
+					}
+				}
+				if (valid){
+					filteredOrders.put(entry.key,entryValue);
+				}
+			}
+
+			change orders options {
+				return filteredOrders;
+			}
+		</action>
+	</data>
+	<data type="date">
+		<id>date_to</id>
+		<title>To</title>
+		<placeholder>placeholder</placeholder>
+		<desc>Select end date</desc>
+		<action trigger="set">
+			fromDate : f.date_from,
+			toDate : f.date_to,
+			originalOrders: f.order_history,
+			orders : f.order_history_visible;
+
+			def allOrders = originalOrders.options;
+			def filteredOrders = new LinkedHashMap();
+			
+			for(entry in allOrders) {
+				def valid = true;
+				def entryValue = entry.getValue() as String;
+				def tokens = entryValue.split(',');
+
+				def formatter = java.time.format.DateTimeFormatter.ofPattern("dd.MM.yyyy");
+				def df = tokens[1].replaceAll("\\s","");
+				def datelimit = java.time.LocalDate.parse(df, formatter);
+				if (fromDate.value != null){
+					if (datelimit.isBefore(fromDate.value)){
+						valid = false;
+					}
+				}
+				if (toDate.value != null){
+					if (datelimit.isAfter(toDate.value)){
+						valid = false;
+					}
+				}
+				if (valid){
+					filteredOrders.put(entry.key,entryValue);
+				}
+			}
+
+			change orders options {
+				return filteredOrders;
+			}
+		</action>
+	</data>
 	<!-- I18NS -->
 	<!-- TRANSITIONS -->
 	<transition>
@@ -219,9 +342,39 @@
 			<id>DataGroup_0</id>
 			<layout>grid</layout>
 			<dataRef>
-				<id>order_history</id>
+				<id>date_from</id>
 				<logic>
 					<behavior>editable</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>1</y>
+					<rows>1</rows>
+					<cols>2</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>date_to</id>
+				<logic>
+					<behavior>editable</behavior>
+				</logic>
+				<layout>
+					<x>2</x>
+					<y>1</y>
+					<rows>1</rows>
+					<cols>2</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>order_history</id>
+				<logic>
+					<behavior>hidden</behavior>
 				</logic>
 				<layout>
 					<x>0</x>
@@ -233,7 +386,23 @@
 					<appearance>outline</appearance>
 				</layout>
 			</dataRef>
+			<dataRef>
+				<id>order_history_visible</id>
+				<logic>
+					<behavior>editable</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>2</y>
+					<rows>1</rows>
+					<cols>4</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
 		</dataGroup>
+		
 	</transition>
 	<transition>
 		<id>23</id>
