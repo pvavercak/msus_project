@@ -1,0 +1,239 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://modeler.netgrif.com/petriflow_schema.xsd">
+	<id>menu_and_orders</id>
+	<version>1.0.0</version>
+	<initials>MAR</initials>
+	<title>Menu And Orders</title>
+	<defaultRole>true</defaultRole>
+	<transitionRole>false</transitionRole>
+	<!-- TRANSACTIONS -->
+	<!-- ROLES -->
+	<role>
+		<id>restaurant</id>
+		<title>Restaurant</title>
+	</role>
+	<role>
+		<id>employee</id>
+		<title>Employee</title>
+	</role>
+	<!-- DATA -->
+	<data type="taskRef">
+		<id>order_history_taskref</id>
+		<title>History Of Orders</title>
+		<desc>There are all placed orders</desc>
+	</data>
+	<data type="text">
+		<id>meal_name</id>
+		<title>Meal Name</title>
+		<placeholder>Apple Pie</placeholder>
+		<desc>Enter a meal name</desc>
+	</data>
+	<data type="number">
+		<id>meal_price</id>
+		<title>Meal Price</title>
+		<placeholder>3.0</placeholder>
+		<desc>Enter a meal price</desc>
+	</data>
+	<!-- I18NS -->
+	<!-- TRANSITIONS -->
+	<transition>
+		<id>6</id>
+		<x>500</x>
+		<y>180</y>
+		<layout>
+			<offset>0</offset>
+		</layout>
+		<label>All Orders</label>
+		<icon>assessment</icon>
+		<roleRef>
+			<id>restaurant</id>
+			<logic>
+				<perform>true</perform>
+				<view>true</view>
+			</logic>
+		</roleRef>
+		<dataGroup>
+			<id>DataGroup_0</id>
+			<layout>grid</layout>
+			<dataRef>
+				<id>order_history_taskref</id>
+				<logic>
+					<behavior>editable</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>0</y>
+					<rows>1</rows>
+					<cols>4</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+		</dataGroup>
+	</transition>
+	<transition>
+		<id>8</id>
+		<x>380</x>
+		<y>340</y>
+		<layout>
+			<offset>0</offset>
+		</layout>
+		<label>Menu</label>
+		<icon>menu_book</icon>
+		<roleRef>
+			<id>restaurant</id>
+			<logic>
+				<perform>true</perform>
+				<view>true</view>
+			</logic>
+		</roleRef>
+		<roleRef>
+			<id>employee</id>
+			<logic>
+				<perform>true</perform>
+				<view>true</view>
+			</logic>
+		</roleRef>
+	</transition>
+	<transition>
+		<id>10</id>
+		<x>260</x>
+		<y>180</y>
+		<layout>
+			<offset>0</offset>
+		</layout>
+		<label>Edit Meal</label>
+		<icon>edit</icon>
+		<roleRef>
+			<id>restaurant</id>
+			<logic>
+				<perform>true</perform>
+				<view>true</view>
+			</logic>
+		</roleRef>
+		<dataGroup>
+			<id>DataGroup_0</id>
+			<layout>grid</layout>
+			<dataRef>
+				<id>meal_name</id>
+				<logic>
+					<behavior>editable</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>0</y>
+					<rows>1</rows>
+					<cols>3</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>meal_price</id>
+				<logic>
+					<behavior>editable</behavior>
+				</logic>
+				<layout>
+					<x>3</x>
+					<y>0</y>
+					<rows>1</rows>
+					<cols>1</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+		</dataGroup>
+	</transition>
+	<transition>
+		<id>11</id>
+		<x>380</x>
+		<y>60</y>
+		<layout>
+			<offset>0</offset>
+		</layout>
+		<label>Add Meal</label>
+		<icon>add</icon>
+		<roleRef>
+			<id>restaurant</id>
+			<logic>
+				<perform>true</perform>
+				<view>true</view>
+			</logic>
+		</roleRef>
+		<dataGroup>
+			<id>DataGroup_0</id>
+			<layout>grid</layout>
+			<dataRef>
+				<id>meal_name</id>
+				<logic>
+					<behavior>editable</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>0</y>
+					<rows>1</rows>
+					<cols>3</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>meal_price</id>
+				<logic>
+					<behavior>editable</behavior>
+				</logic>
+				<layout>
+					<x>3</x>
+					<y>0</y>
+					<rows>1</rows>
+					<cols>1</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+		</dataGroup>
+	</transition>
+	<!-- PLACES -->
+	<place>
+		<id>4</id>
+		<x>380</x>
+		<y>180</y>
+		<label>Restaurants Profile</label>
+		<tokens>1</tokens>
+		<static>false</static>
+	</place>
+	<!-- ARCS -->
+	<arc>
+		<id>7</id>
+		<type>read</type>
+		<sourceId>4</sourceId>
+		<destinationId>6</destinationId>
+		<multiplicity>1</multiplicity>
+	</arc>
+	<arc>
+		<id>9</id>
+		<type>read</type>
+		<sourceId>4</sourceId>
+		<destinationId>8</destinationId>
+		<multiplicity>1</multiplicity>
+	</arc>
+	<arc>
+		<id>12</id>
+		<type>regular</type>
+		<sourceId>4</sourceId>
+		<destinationId>11</destinationId>
+		<multiplicity>1</multiplicity>
+	</arc>
+	<arc>
+		<id>15</id>
+		<type>read</type>
+		<sourceId>4</sourceId>
+		<destinationId>10</destinationId>
+		<multiplicity>1</multiplicity>
+	</arc>
+</document>
