@@ -21,6 +21,17 @@
 		<id>order_history_taskref</id>
 		<title>History Of Orders</title>
 		<desc>There are all placed orders</desc>
+		<action trigger="get">
+			tref : f.this;
+
+			def groupId = findCase{it.processIdentifier.eq("org_group").and(it.author.id.eq(loggedUser().id))}?.stringId;
+			def orderCase = findCase{it.processIdentifier.eq("${groupId}_meal_ordering" as String)};
+			def task = findTask{it.caseId.eq(orderCase.stringId).and(it.transitionId.eq("19"))};
+
+			change tref value {
+				return [task.stringId];
+			}
+		</action>
 	</data>
 	<data type="text">
 		<id>meal_name</id>
@@ -62,7 +73,7 @@
 				</logic>
 				<layout>
 					<x>0</x>
-					<y>0</y>
+					<y>2</y>
 					<rows>1</rows>
 					<cols>4</cols>
 					<offset>0</offset>

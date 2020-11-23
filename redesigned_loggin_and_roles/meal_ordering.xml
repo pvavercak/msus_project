@@ -24,27 +24,6 @@
 		<options>
 			<!-- <option key="vdkj">4515,rezen,5.80</option> -->
 		</options>
-		<action trigger="get">
-			originalOrders: f.order_history,
-			orders : f.this;
-
-			def userSystemId = userService.loggedUser.email as String;
-
-			def allOrders = originalOrders.options;
-			def filteredOrders = new LinkedHashMap();
-			
-			for(entry in allOrders) {
-				def entryValue = entry.getValue() as String;
-				def tokens = entryValue.split(',');
-				if (tokens[0].equals(userSystemId)){
-					filteredOrders.put(entry.key,entryValue);
-				}
-			}
-
-			change orders options {
-				return filteredOrders;
-			} 
-		</action>
 	</data>
 	<data type="enumeration_map">
 		<id>order_history_visible</id>
@@ -86,6 +65,65 @@
 				change newMenu choices {
 					return newMenu.choices + [entry.getValue()];
 				}
+			}
+		</action>
+	</data>
+	<data type="enumeration">
+		<id>order_email</id>
+		<title>set label</title>
+		<placeholder>placeholder</placeholder>
+		<desc>description</desc>
+		<values>xvavercak@stuba.sk</values>
+		<values>xfedorko@stuba.sk</values>
+		<values>xspak@stuba.sk</values>
+		<values>xbilansky@stuba.sk</values>
+		<action trigger="set">
+			fromDate: f.date_from,
+			toDate: f.date_to,
+			originalOrders: f.order_history,
+			emails: f.order_email,
+			orders: f.order_history_visible;
+
+			def allOrders = originalOrders.options;
+			def filteredOrders = new LinkedHashMap();
+			def email = emails.value;
+			if (email != null){
+				email = email as String;
+				email = email.replaceAll("\\s",""); 
+			}
+			for(entry in allOrders) {
+				def valid = true;
+				def entryValue = entry.getValue() as String;
+				def tokens = entryValue.split(',');
+
+				def formatter = java.time.format.DateTimeFormatter.ofPattern("dd.MM.yyyy");
+				def df = tokens[1].replaceAll("\\s","");
+				def mail = tokens[0].replaceAll("\\s","");
+				def datelimit = java.time.LocalDate.parse(df, formatter);
+
+				if(email != null){
+					if (!mail.equals(email)){
+						valid = false;
+					}
+				}
+				
+				if (fromDate.value != null){
+					if (datelimit.isBefore(fromDate.value)){
+						valid = false;
+					}
+				}
+				if (toDate.value != null){
+					if (datelimit.isAfter(toDate.value)){
+						valid = false;
+					}
+				}
+				if (valid){
+					filteredOrders.put(entry.key,entryValue);
+				}
+			}
+
+			change orders options {
+				return filteredOrders;
 			}
 		</action>
 	</data>
@@ -184,11 +222,16 @@
 			fromDate: f.date_from,
 			toDate: f.date_to,
 			originalOrders: f.order_history,
+			emails: f.order_email,
 			orders: f.order_history_visible;
 
 			def allOrders = originalOrders.options;
 			def filteredOrders = new LinkedHashMap();
-			
+			def email = emails.value;
+			if (email != null){
+				email = email as String;
+				email = email.replaceAll("\\s",""); 
+			}
 			for(entry in allOrders) {
 				def valid = true;
 				def entryValue = entry.getValue() as String;
@@ -196,7 +239,15 @@
 
 				def formatter = java.time.format.DateTimeFormatter.ofPattern("dd.MM.yyyy");
 				def df = tokens[1].replaceAll("\\s","");
+				def mail = tokens[0].replaceAll("\\s","");
 				def datelimit = java.time.LocalDate.parse(df, formatter);
+
+				if(email != null){
+					if (!mail.equals(email)){
+						valid = false;
+					}
+				}
+				
 				if (fromDate.value != null){
 					if (datelimit.isBefore(fromDate.value)){
 						valid = false;
@@ -223,14 +274,19 @@
 		<placeholder>placeholder</placeholder>
 		<desc>Select end date</desc>
 		<action trigger="set">
-			fromDate : f.date_from,
-			toDate : f.date_to,
+			fromDate: f.date_from,
+			toDate: f.date_to,
 			originalOrders: f.order_history,
-			orders : f.order_history_visible;
+			emails: f.order_email,
+			orders: f.order_history_visible;
 
 			def allOrders = originalOrders.options;
 			def filteredOrders = new LinkedHashMap();
-			
+			def email = emails.value;
+			if (email != null){
+				email = email as String;
+				email = email.replaceAll("\\s",""); 
+			}
 			for(entry in allOrders) {
 				def valid = true;
 				def entryValue = entry.getValue() as String;
@@ -238,7 +294,15 @@
 
 				def formatter = java.time.format.DateTimeFormatter.ofPattern("dd.MM.yyyy");
 				def df = tokens[1].replaceAll("\\s","");
+				def mail = tokens[0].replaceAll("\\s","");
 				def datelimit = java.time.LocalDate.parse(df, formatter);
+
+				if(email != null){
+					if (!mail.equals(email)){
+						valid = false;
+					}
+				}
+				
 				if (fromDate.value != null){
 					if (datelimit.isBefore(fromDate.value)){
 						valid = false;
@@ -312,6 +376,7 @@
 				</layout>
 			</dataRef>
 		</dataGroup>
+
 	</transition>
 	<transition>
 		<id>19</id>
@@ -357,6 +422,21 @@
 				</layout>
 			</dataRef>
 			<dataRef>
+				<id>order_email</id>
+				<logic>
+					<behavior>hidden</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>0</y>
+					<rows>1</rows>
+					<cols>4</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
 				<id>date_to</id>
 				<logic>
 					<behavior>editable</behavior>
@@ -378,7 +458,7 @@
 				</logic>
 				<layout>
 					<x>0</x>
-					<y>0</y>
+					<y>3</y>
 					<rows>1</rows>
 					<cols>4</cols>
 					<offset>0</offset>
@@ -402,7 +482,36 @@
 				</layout>
 			</dataRef>
 		</dataGroup>
-		
+		<event type="assign">
+            <id>3_assign</id>
+            <actions phase="pre">
+                <action>
+					tr : t.this,
+					emails: f.order_email;
+
+					def userSystemId = userService.loggedUser.email as String;
+					change emails value {
+						return userSystemId;
+					}
+					make emails, visible on tr when {
+						return true;
+					}
+                </action>
+            </actions>
+        </event>
+		<event type="finish">
+            <id>3_finish</id>
+            <actions phase="pre">
+                <action>
+					tr : t.this,
+					emails: f.order_email;
+					
+					make emails, editable on tr when {
+						return true;
+					}
+                </action>
+            </actions>
+        </event>
 	</transition>
 	<transition>
 		<id>23</id>
