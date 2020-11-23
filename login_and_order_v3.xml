@@ -21,10 +21,11 @@
 		<desc>Enter a password</desc>
 	</data>
 	<data type="enumeration">
-		<id>enumeration_0</id>
+		<id>available_days</id>
 		<title>Day of the week</title>
 		<desc>Choose a day of this week</desc>
 		<action trigger="get">
+			<!-- This action adds  choices to available_days according to a current day of the week-->
 			daysChoice: f.this;
 
 			def dowArray = [
@@ -44,12 +45,13 @@
 			}
 		</action>
 		<action trigger="set">
-			performOrder: f.4002,
-			addingOrder: f.4003,
-			outputik2: f.text_2,
+			<!-- verifies is we already have some orders -->
+			canDelete: f.4002,
 			dayOrder: f.this,
-			outputik: f.email_field,
-			alreadyOrdered: f.already_ordered_taskref;
+			email: f.email_field,
+			orderHistory: f.order_history,
+			tr: t.6,
+			alreadyOrdered: f.already_ordered;
 
 			def dowArray = [
 				"Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"
@@ -65,96 +67,32 @@
 			} else {
 				currentOrderDate = today.plus(Math.abs(indexSelected - indexToday));
 			}
-			
-			def groupId = findCase{it.processIdentifier.eq("org_group").and(it.author.id.eq(loggedUser().id))}?.stringId;
-			def tasks = findTasks{it.caseId.eq(useCase.stringId as String).and(it.transitionId.eq("34"))};
 
-			change performOrder value {
+			make alreadyOrdered,hidden on tr when {
+				return true;
+			}
+
+			change canDelete value {
 				return "10";
 			}
-			change addingOrder value {
-				return "1";
-			}
-			for(task in tasks) {
-				def data = getData(task);
-				if (data.containsKey("date_1")) {
 
-					def dayInTask = data["date_1"].value.getDayOfWeek().toString().toLowerCase();
-					def indexDayInTask = dowArray.findIndexOf{ it.toLowerCase() == dayInTask };
-					def indexCurr = currentOrderDate.getDay();
+			def key = "${email}_${currentOrderDate.format('dd.MM.yyyy')}";
+			key = key.replaceAll(/\./, "_");
 
-					if ( indexDayInTask == indexCurr ) {
-						change alreadyOrdered value {
-							return [task.stringId];
-						}
-						change performOrder value {
-							return "1";
-						}
-						change addingOrder value {
-							return "0";
-						}
-						change outputik value {
-							return "Martin pije kavicku";
-						}
-						break;
-					} else {
-						change outputik value {
-							return indexCurr as String;
-						}
-						change outputik2 value {
-							return indexDayInTask as String;
-						}
-					}
-				} 
-			}
-		</action>
-	</data>
-	<data type="taskRef">
-		<id>taskRef_0</id>
-		<title>set label</title>
-		<placeholder>placeholder</placeholder>
-		<desc>description</desc>
-		<init>value</init>
-	</data>
-	<data type="date">
-		<id>date_1</id>
-		<title>Date</title>
-		<desc>Meal order date</desc>
-		<action trigger="get">
-			dateField: f.this,
-			mealOrdered: f.text_2,
-			dayOrder: f.enumeration_0;
-
-			def dowArray = [
-				"Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"
-			]
-
-			def today = new Date();
-			def indexSelected = dowArray.findIndexOf{ it == (dayOrder.value as String) };
-			def indexToday = today.getDay();
-
-			change dateField value {
-				if (0 > (indexSelected - indexToday)) {
-					return today.plus(7 - Math.abs(indexSelected - indexToday));
+			def historyMap = orderHistory.options;
+			if (historyMap.containsKey(key)) {
+				change alreadyOrdered value {
+					def tokensAsString = historyMap.get(key) as String;
+					def tokens = tokensAsString.split(',');
+					return tokens[2] + ", " + tokens[3];
 				}
-				return today.plus(Math.abs(indexSelected - indexToday));
+				make alreadyOrdered,visible on tr when {
+					return true;
+				}
+				change canDelete value {
+					return "1";
+				}
 			}
-		</action>
-	</data>
-	<data type="text">
-		<id>text_2</id>
-		<title>Meal</title>
-		<desc>Name of chosen meal</desc>
-		<init>value</init>
-		<action trigger="get">
-			<!-- @formatter:off -->
-			<!-- thisData: f.this,
-			order: f.enumeration_1;
-
-			change thisData value {
-				return order.value as String;
-			} -->
-			<!-- @formatter:on -->
 		</action>
 	</data>
 	<data type="number">
@@ -170,11 +108,11 @@
 		<init>0</init>
 	</data>
 	<data type="enumeration">
-		<id>enumeration_1</id>
+		<id>offer_today</id>
 		<title>Today's Offer</title>
 		<desc>Meals you can order for this day</desc>
 		<action trigger="get">
-			<!-- @formatter:off -->
+			<!-- gather all the meals from menu case -->
 			newMenu: f.this;
 
 			def groupId = findCase{it.processIdentifier.eq("org_group").and(it.author.id.eq(loggedUser().id))}?.stringId;
@@ -192,27 +130,25 @@
 					return newMenu.choices + [entry.getValue()];
 				}
 			}
-			<!-- @formatter:on -->
 		</action>
 	</data>
-	<data type="number" immediate="false">
+	<data type="number">
 		<id>4002</id>
 		<title>Perform delete order</title>
 		<placeholder>0</placeholder>
 		<desc>This variable is set to 1 when already ordered for the day</desc>
 		<init>10</init>
 	</data>
-	<data type="taskRef">
-		<id>already_ordered_taskref</id>
-		<title>Already ordered today</title>
-		<placeholder>You have ordered no meal for this day</placeholder>
-		<desc>A meal you have ordered will be displayed heere</desc>
+	<data type="text">
+		<id>already_ordered</id>
+		<title>Order assigned to this day</title>
+		<desc>You have already ordered this meal</desc>
 	</data>
-	<data type="number">
-		<id>4003</id>
-		<title>Adding Order</title>
-		<desc>This will be set to 0 in case you are editing today's order</desc>
-		<init>1</init>
+	<data type="enumeration_map">
+		<id>order_history</id>
+		<title>History of Orders</title>
+		<desc>There go all orders</desc>
+		<options></options>
 	</data>
 	<!-- I18NS -->
 	<!-- TRANSITIONS -->
@@ -231,6 +167,7 @@
 				<id>email_field</id>
 				<logic>
 					<behavior>editable</behavior>
+					<behavior>required</behavior>
 				</logic>
 				<layout>
 					<x>0</x>
@@ -246,6 +183,7 @@
 				<id>passwd_field</id>
 				<logic>
 					<behavior>editable</behavior>
+					<behavior>required</behavior>
 				</logic>
 				<layout>
 					<x>0</x>
@@ -259,10 +197,10 @@
 			</dataRef>
 		</dataGroup>
 		<event type="finish">
-			<id>2_finish</id>
+			<id>14_finish</id>
 			<actions phase="pre">
 				<action trigger="set">
-					<!-- @formatter:off -->
+					<!-- logic behind the logging into the case -->
 					success : f.4000,
 					fail : f.4001,
 					email : f.email_field,
@@ -298,7 +236,6 @@
 							return 0;
 						};
 					}
-					<!-- @formatter:on -->
                 </action>
 			</actions>
 		</event>
@@ -315,7 +252,7 @@
 		<dataGroup>
 			<id>DataGroup_0</id>
 			<dataRef>
-				<id>enumeration_0</id>
+				<id>available_days</id>
 				<logic>
 					<behavior>editable</behavior>
 				</logic>
@@ -330,14 +267,14 @@
 				</layout>
 			</dataRef>
 			<dataRef>
-				<id>already_ordered_taskref</id>
+				<id>already_ordered</id>
 				<logic>
-					<behavior>editable</behavior>
+					<behavior>visible</behavior>
 				</logic>
 				<layout>
 					<x>0</x>
-					<y>2</y>
-					<rows>2</rows>
+					<y>1</y>
+					<rows>1</rows>
 					<cols>4</cols>
 					<offset>0</offset>
 					<template>material</template>
@@ -347,6 +284,15 @@
 		</dataGroup>
 		<!-- new org.bson.types.ObjectId(String) -->
 	</transition>
+
+
+
+
+	<!-- ################### order meal ####################### -->
+
+
+
+
 	<transition>
 		<id>26</id>
 		<x>700</x>
@@ -359,7 +305,7 @@
 		<dataGroup>
 			<id>DataGroup_0</id>
 			<dataRef>
-				<id>enumeration_1</id>
+				<id>offer_today</id>
 				<logic>
 					<behavior>editable</behavior>
 					<behavior>required</behavior>
@@ -378,54 +324,24 @@
 	</transition>
 	<transition>
 		<id>34</id>
-		<x>820</x>
-		<y>580</y>
+		<x>130</x>
+		<y>426</y>
 		<layout>
 			<offset>0</offset>
 		</layout>
-		<label>Order Status</label>
-		<icon>assessment</icon>
+		<label>History of Orders</label>
+		<icon>storage</icon>
 		<dataGroup>
 			<id>DataGroup_0</id>
 			<dataRef>
-				<id>email_field</id>
+				<id>order_history</id>
 				<logic>
-					<behavior>visible</behavior>
+					<behavior>editable</behavior>
 				</logic>
 				<layout>
 					<x>0</x>
 					<y>0</y>
-					<rows>2</rows>
-					<cols>2</cols>
-					<offset>0</offset>
-					<template>material</template>
-					<appearance>outline</appearance>
-				</layout>
-			</dataRef>
-			<dataRef>
-				<id>date_1</id>
-				<logic>
-					<behavior>visible</behavior>
-				</logic>
-				<layout>
-					<x>2</x>
-					<y>0</y>
-					<rows>2</rows>
-					<cols>2</cols>
-					<offset>0</offset>
-					<template>material</template>
-					<appearance>outline</appearance>
-				</layout>
-			</dataRef>
-			<dataRef>
-				<id>text_2</id>
-				<logic>
-					<behavior>visible</behavior>
-				</logic>
-				<layout>
-					<x>0</x>
-					<y>2</y>
-					<rows>2</rows>
+					<rows>1</rows>
 					<cols>4</cols>
 					<offset>0</offset>
 					<template>material</template>
@@ -463,9 +379,41 @@
 		</layout>
 		<label>Delete Order</label>
 		<icon>delete_forever</icon>
-		<dataGroup>
-			<id>DataGroup_0</id>
-		</dataGroup>
+		<event type="finish">
+			<id>130_finish</id>
+			<actions phase="pre">
+				<action>
+					dayOrder: f.available_days,
+					email: f.email_field,
+					orderHistory: f.order_history,
+					alreadyOrdered: f.already_ordered;
+
+					def dowArray = [
+						"Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"
+					]
+
+					def today = new Date();
+					def indexSelected = dowArray.findIndexOf{ it == (dayOrder.value as String) };
+					def indexToday = today.getDay();
+
+					def currentOrderDate = null;
+					if (0 > (indexSelected - indexToday)) {
+						currentOrderDate = today.plus(7 - Math.abs(indexSelected - indexToday));
+					} else {
+						currentOrderDate = today.plus(Math.abs(indexSelected - indexToday));
+					}
+
+					def key = "${email}_${currentOrderDate.format('dd.MM.yyyy')}";
+					key = key.replaceAll(/\./, "_");
+
+					def historyMap = orderHistory.options;
+					historyMap.remove(key);
+					change orderHistory options {
+						return historyMap;
+					}
+				</action>
+			</actions>
+		</event>
 	</transition>
 	<transition>
 		<id>78</id>
@@ -476,6 +424,42 @@
 		</layout>
 		<label>Confirm</label>
 		<icon>check</icon>
+		<event type="finish">
+			<id>2_finish</id>
+			<actions phase="pre">
+				<action>
+					email : f.email_field,
+					chosenDay : f.available_days,
+					chosenMeal : f.offer_today,
+					orderHistory : f.order_history;
+
+					def dowArray = [
+						"Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"
+					]
+
+					def today = new Date();
+					def indexSelected = dowArray.findIndexOf{ it == (chosenDay.value as String) };
+					def indexToday = today.getDay();
+
+					def currentOrderDate = null;
+					if (0 > (indexSelected - indexToday)) {
+						currentOrderDate = today.plus(7 - Math.abs(indexSelected - indexToday));
+					} else {
+						currentOrderDate = today.plus(Math.abs(indexSelected - indexToday));
+					}
+
+					def historyMap = orderHistory.options;
+					def key = "${email}_${currentOrderDate.format('dd.MM.yyyy')}";
+					key = key.replaceAll(/\./, "_");
+					
+					def valueForMap = email.value + ", ${currentOrderDate}, " + (chosenMeal.value as String);
+					historyMap.put(key, valueForMap)
+					change orderHistory options {
+						return historyMap;
+					}
+				</action>
+			</actions>
+		</event>
 	</transition>
 	<!-- PLACES -->
 	<place>
@@ -503,14 +487,6 @@
 		<static>false</static>
 	</place>
 	<place>
-		<id>22</id>
-		<x>700</x>
-		<y>580</y>
-		<label>Order Entered</label>
-		<tokens>0</tokens>
-		<static>false</static>
-	</place>
-	<place>
 		<id>77</id>
 		<x>540</x>
 		<y>460</y>
@@ -531,13 +507,6 @@
 		<type>regular</type>
 		<sourceId>8</sourceId>
 		<destinationId>26</destinationId>
-		<multiplicity>1</multiplicity>
-	</arc>
-	<arc>
-		<id>41</id>
-		<type>regular</type>
-		<sourceId>22</sourceId>
-		<destinationId>40</destinationId>
 		<multiplicity>1</multiplicity>
 	</arc>
 	<arc>
@@ -567,13 +536,6 @@
 		<sourceId>4</sourceId>
 		<destinationId>63</destinationId>
 		<multiplicity>1</multiplicity>
-	</arc>
-	<arc>
-		<id>67</id>
-		<type>variable</type>
-		<sourceId>26</sourceId>
-		<destinationId>22</destinationId>
-		<multiplicity>4003</multiplicity>
 	</arc>
 	<arc>
 		<id>70</id>
@@ -654,7 +616,7 @@
 	<arc>
 		<id>85</id>
 		<type>read</type>
-		<sourceId>22</sourceId>
+		<sourceId>4</sourceId>
 		<destinationId>34</destinationId>
 		<multiplicity>1</multiplicity>
 	</arc>

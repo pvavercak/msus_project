@@ -1,0 +1,509 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://modeler.netgrif.com/petriflow_schema.xsd">
+	<id>meal_ordering</id>
+	<version>1.0.0</version>
+	<initials>MOR</initials>
+	<title>Meal Ordering</title>
+	<defaultRole>true</defaultRole>
+	<transitionRole>false</transitionRole>
+	<!-- TRANSACTIONS -->
+	<!-- ROLES -->
+	<role>
+		<id>restaurant</id>
+		<title>Restaurant Administrator</title>
+	</role>
+	<role>
+		<id>employee</id>
+		<title>Employee</title>
+	</role>
+	<!-- DATA -->
+	<data type="enumeration_map">
+		<id>order_history</id>
+		<title>Order History</title>
+		<desc>History of all orders for this week</desc>
+		<options>
+			<!-- <option key="vdkj">4515,rezen,5.80</option> -->
+		</options>
+	</data>
+	<data type="enumeration">
+		<id>menu</id>
+		<title>Menu</title>
+		<desc>Select a meal you want to order</desc>
+		<action trigger="get">
+			<!-- gather all the meals from menu case -->
+			newMenu: f.this;
+
+			def groupId = findCase{it.processIdentifier.eq("org_group")}?.stringId;
+			def menucase = findCase{it.processIdentifier.eq("5f86b23ff9ac3b272d6c911d_1_menu" as String)};
+
+			def data = getData("122", menucase);
+			def menu = data["menu_overview"].options;
+
+			change newMenu choices {
+				return [];
+			}
+
+			for(entry in menu) {
+				change newMenu choices {
+					return newMenu.choices + [entry.getValue()];
+				}
+			}
+		</action>
+	</data>
+	<data type="text">
+		<id>already_ordered</id>
+		<title>Order for this day</title>
+		<desc>A meal you have already ordered for the selected day</desc>
+	</data>
+	<data type="enumeration">
+		<id>day</id>
+		<title>Day</title>
+		<desc>Select a day you want to order for</desc>
+		<action trigger="get">
+			<!-- This action adds  choices to day according to a current day of the week-->
+			daysEnum: f.this;
+
+			def dowArray = [
+				"Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"
+			]
+			
+			change daysEnum choices {
+				return [];
+			}
+
+			def today = new Date();
+			def indexToday = (today.getDay() >= 5) ? 0 : today.getDay();
+			for(int i = indexToday + 1; i &lt; 6; ++i) {
+				change daysEnum choices {
+					return daysEnum.choices + [dowArray[i]];
+				}
+			}
+		</action>
+		<action trigger="set">
+			<!-- verifies is we already have some orders -->
+			canDeleteOrderMultiplicity: f.4000,
+			daysEnum: f.this,
+			orderHistory: f.order_history,
+			tr: t.4,
+			alreadyOrdered: f.already_ordered;
+
+			def userSystemId = userService.loggedUser.email as String;
+			def dowArray = [
+				"Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"
+			]
+
+			def today = new Date();
+			def indexSelected = dowArray.findIndexOf{ it == (daysEnum.value as String) };
+			def indexToday = today.getDay();
+
+			def currentOrderDate = null;
+			if (0 > (indexSelected - indexToday)) {
+				currentOrderDate = today.plus(7 - Math.abs(indexSelected - indexToday));
+			} else {
+				currentOrderDate = today.plus(Math.abs(indexSelected - indexToday));
+			}
+
+			make alreadyOrdered,hidden on tr when {
+				return true;
+			}
+
+			change canDeleteOrderMultiplicity value {
+				return "5";
+			}
+
+			def key = "${userSystemId}_${currentOrderDate.format('dd.MM.yyyy')}";
+			key = key.replaceAll(/\./, "_");
+
+			def historyMap = orderHistory.options;
+			if (historyMap.containsKey(key)) {
+				change alreadyOrdered value {
+					def tokensAsString = historyMap.get(key) as String;
+					def tokens = tokensAsString.split(',');
+					return tokens[2] + ", " + tokens[3];
+				}
+				make alreadyOrdered,visible on tr when {
+					return true;
+				}
+				change canDeleteOrderMultiplicity value {
+					return "1";
+				}
+			}
+		</action>
+	</data>
+	<data type="number">
+		<id>4000</id>
+		<title>Delele Order Arc</title>
+		<desc>This value will be 1 in case order to delete exists</desc>
+		<init>5</init>
+	</data>
+	<!-- I18NS -->
+	<!-- TRANSITIONS -->
+	<transition>
+		<id>4</id>
+		<x>300</x>
+		<y>220</y>
+		<layout>
+			<offset>0</offset>
+		</layout>
+		<label>Select Day</label>
+		<icon>today</icon>
+		<roleRef>
+			<id>employee</id>
+			<logic>
+				<perform>true</perform>
+				<delegate>true</delegate>
+				<view>true</view>
+			</logic>
+		</roleRef>
+		<dataGroup>
+			<id>DataGroup_0</id>
+			<layout>grid</layout>
+			<dataRef>
+				<id>day</id>
+				<logic>
+					<behavior>editable</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>0</y>
+					<rows>1</rows>
+					<cols>4</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>already_ordered</id>
+				<logic>
+					<behavior>hidden</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>3</y>
+					<rows>1</rows>
+					<cols>4</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+		</dataGroup>
+	</transition>
+	<transition>
+		<id>19</id>
+		<x>180</x>
+		<y>100</y>
+		<layout>
+			<offset>0</offset>
+		</layout>
+		<label>Order History</label>
+		<icon>assessment</icon>
+		<roleRef>
+			<id>employee</id>
+			<logic>
+				<perform>true</perform>
+				<delegate>true</delegate>
+				<view>true</view>
+			</logic>
+		</roleRef>
+		<roleRef>
+			<id>restaurant</id>
+			<logic>
+				<perform>true</perform>
+				<delegate>true</delegate>
+				<view>true</view>
+			</logic>
+		</roleRef>
+		<dataGroup>
+			<id>DataGroup_0</id>
+			<layout>grid</layout>
+			<dataRef>
+				<id>order_history</id>
+				<logic>
+					<behavior>editable</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>0</y>
+					<rows>1</rows>
+					<cols>4</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+		</dataGroup>
+	</transition>
+	<transition>
+		<id>23</id>
+		<x>300</x>
+		<y>100</y>
+		<layout>
+			<offset>0</offset>
+		</layout>
+		<label>Delete Order</label>
+		<icon>delete_forever</icon>
+		<roleRef>
+			<id>employee</id>
+			<logic>
+				<perform>true</perform>
+				<delegate>true</delegate>
+				<view>true</view>
+			</logic>
+		</roleRef>
+		<event type="finish">
+			<id>finish_deletion_of_order</id>
+			<actions phase="pre">
+				<action>
+					daysEnum: f.day,
+					orderHistory: f.order_history,
+					alreadyOrdered: f.already_ordered;
+
+					def userSystemId = userService.loggedUser.email as String;
+
+					def dowArray = [
+						"Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"
+					]
+
+					def today = new Date();
+					def indexSelected = dowArray.findIndexOf{ it == (daysEnum.value as String) };
+					def indexToday = today.getDay();
+
+					def currentOrderDate = null;
+					if (0 > (indexSelected - indexToday)) {
+						currentOrderDate = today.plus(7 - Math.abs(indexSelected - indexToday));
+					} else {
+						currentOrderDate = today.plus(Math.abs(indexSelected - indexToday));
+					}
+
+					def key = "${userSystemId}_${currentOrderDate.format('dd.MM.yyyy')}";
+					key = key.replaceAll(/\./, "_");
+
+					def historyMap = orderHistory.options;
+					historyMap.remove(key);
+					change orderHistory options {
+						return historyMap;
+					}
+				</action>
+			</actions>
+		</event>
+	</transition>
+	<transition>
+		<id>26</id>
+		<x>540</x>
+		<y>220</y>
+		<layout>
+			<offset>0</offset>
+		</layout>
+		<label>Select Meal</label>
+		<icon>list</icon>
+		<roleRef>
+			<id>employee</id>
+			<logic>
+				<perform>true</perform>
+				<delegate>true</delegate>
+				<view>true</view>
+			</logic>
+		</roleRef>
+		<dataGroup>
+			<id>DataGroup_0</id>
+			<layout>grid</layout>
+			<dataRef>
+				<id>menu</id>
+				<logic>
+					<behavior>editable</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>0</y>
+					<rows>1</rows>
+					<cols>4</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+		</dataGroup>
+	</transition>
+	<transition>
+		<id>28</id>
+		<x>300</x>
+		<y>300</y>
+		<layout>
+			<offset>0</offset>
+		</layout>
+		<label>Confirm</label>
+		<icon>check</icon>
+		<roleRef>
+			<id>employee</id>
+			<logic>
+				<perform>true</perform>
+				<delegate>true</delegate>
+				<view>true</view>
+			</logic>
+		</roleRef>
+		<event type="finish">
+			<id>finish_order_confirmation</id>
+			<actions phase="pre">
+				<action>
+					chosenDay : f.day,
+					chosenMeal : f.menu,
+					orderHistory : f.order_history;
+
+					def userSystemId = userService.loggedUser.email as String;
+
+					def dowArray = [
+						"Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"
+					]
+
+					def today = new Date();
+					def indexSelected = dowArray.findIndexOf{ it == (chosenDay.value as String) };
+					def indexToday = today.getDay();
+
+					def currentOrderDate = null;
+					if (0 > (indexSelected - indexToday)) {
+						currentOrderDate = today.plus(7 - Math.abs(indexSelected - indexToday));
+					} else {
+						currentOrderDate = today.plus(Math.abs(indexSelected - indexToday));
+					}
+
+					def historyMap = orderHistory.options;
+					def key = "${userSystemId}_${currentOrderDate.format('dd.MM.yyyy')}";
+					key = key.replaceAll(/\./, "_");
+					
+					def newValueToAdd = userSystemId + ", ${currentOrderDate.format('dd.MM.yyyy')}, " + (chosenMeal.value as String);
+					historyMap.put(key, newValueToAdd)
+					change orderHistory options {
+						return historyMap;
+					}
+				</action>
+			</actions>
+		</event>
+	</transition>
+	<transition>
+		<id>29</id>
+		<x>300</x>
+		<y>380</y>
+		<layout>
+			<offset>0</offset>
+		</layout>
+		<label>Cancel</label>
+		<icon>cancel</icon>
+		<roleRef>
+			<id>employee</id>
+			<logic>
+				<perform>true</perform>
+				<delegate>true</delegate>
+				<view>true</view>
+			</logic>
+		</roleRef>
+	</transition>
+	<!-- PLACES -->
+	<place>
+		<id>2</id>
+		<x>180</x>
+		<y>220</y>
+		<label>Employees Profile</label>
+		<tokens>1</tokens>
+		<static>false</static>
+	</place>
+	<place>
+		<id>21</id>
+		<x>420</x>
+		<y>220</y>
+		<label>Day Selected</label>
+		<tokens>0</tokens>
+		<static>false</static>
+	</place>
+	<place>
+		<id>27</id>
+		<x>540</x>
+		<y>300</y>
+		<label>Order Entered</label>
+		<tokens>0</tokens>
+		<static>false</static>
+	</place>
+	<!-- ARCS -->
+	<arc>
+		<id>15</id>
+		<type>regular</type>
+		<sourceId>2</sourceId>
+		<destinationId>4</destinationId>
+		<multiplicity>1</multiplicity>
+	</arc>
+	<arc>
+		<id>20</id>
+		<type>read</type>
+		<sourceId>2</sourceId>
+		<destinationId>19</destinationId>
+		<multiplicity>1</multiplicity>
+	</arc>
+	<arc>
+		<id>22</id>
+		<type>regular</type>
+		<sourceId>4</sourceId>
+		<destinationId>21</destinationId>
+		<multiplicity>1</multiplicity>
+	</arc>
+	<arc>
+		<id>24</id>
+		<type>variable</type>
+		<sourceId>21</sourceId>
+		<destinationId>23</destinationId>
+		<multiplicity>4000</multiplicity>
+		<breakPoint><x>420</x><y>100</y></breakPoint>
+	</arc>
+	<arc>
+		<id>25</id>
+		<type>regular</type>
+		<sourceId>23</sourceId>
+		<destinationId>2</destinationId>
+		<multiplicity>1</multiplicity>
+	</arc>
+	<arc>
+		<id>30</id>
+		<type>regular</type>
+		<sourceId>21</sourceId>
+		<destinationId>26</destinationId>
+		<multiplicity>1</multiplicity>
+	</arc>
+	<arc>
+		<id>31</id>
+		<type>regular</type>
+		<sourceId>26</sourceId>
+		<destinationId>27</destinationId>
+		<multiplicity>1</multiplicity>
+	</arc>
+	<arc>
+		<id>32</id>
+		<type>regular</type>
+		<sourceId>27</sourceId>
+		<destinationId>28</destinationId>
+		<multiplicity>1</multiplicity>
+	</arc>
+	<arc>
+		<id>33</id>
+		<type>regular</type>
+		<sourceId>27</sourceId>
+		<destinationId>29</destinationId>
+		<multiplicity>1</multiplicity>
+		<breakPoint><x>540</x><y>380</y></breakPoint>
+	</arc>
+	<arc>
+		<id>34</id>
+		<type>regular</type>
+		<sourceId>28</sourceId>
+		<destinationId>2</destinationId>
+		<multiplicity>1</multiplicity>
+		<breakPoint><x>180</x><y>300</y></breakPoint>
+	</arc>
+	<arc>
+		<id>35</id>
+		<type>regular</type>
+		<sourceId>29</sourceId>
+		<destinationId>2</destinationId>
+		<multiplicity>1</multiplicity>
+		<breakPoint><x>180</x><y>380</y></breakPoint>
+	</arc>
+</document>
