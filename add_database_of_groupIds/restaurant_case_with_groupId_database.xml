@@ -1,0 +1,433 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://modeler.netgrif.com/petriflow_schema.xsd">
+	<id>menu_and_orders</id>
+	<version>1.0.0</version>
+	<initials>MAR</initials>
+	<title>Menu And Orders</title>
+	<defaultRole>true</defaultRole>
+	<transitionRole>false</transitionRole>
+	<!-- TRANSACTIONS -->
+	<!-- ROLES -->
+	<role>
+		<id>restaurant</id>
+		<title>Restaurant</title>
+	</role>
+	<!-- DATA -->
+	<data type="taskRef">
+		<id>order_history_taskref</id>
+		<title>History Of Orders</title>
+		<desc>There are all placed orders</desc>
+	</data>
+	<data type="enumeration_map">
+		<id>menu_overview</id>
+		<title>Menu</title>
+		<desc>Menu overview</desc>
+		<options>
+        	<option key="Classical slovak dumplings">Meal: Classical slovak dumplings, Price: 5.00</option>
+			<option key="Fried cheese">Meal: Fried cheese, Price: 3.80</option>
+			<option key="Beef steak with rice and mushroom sausage">Meal: Chicken steak with rice and mushroom sausage, Price: 8.50</option>
+			<option key="Grilled Cheeseburger">Meal: Grilled Cheeseburger, Price: 4.80</option>
+			<option key="Apple Pie">Meal: Apple Pie, Price: 2.80</option>
+			<option key="Chicken Stroganov">Meal: Chicken Stroganov, Price: 6.10</option>
+        </options>
+	</data>
+	<data type="text">
+		<id>meal_name</id>
+		<title>Meal Name</title>
+		<placeholder>Apple Pie</placeholder>
+		<desc>Enter a meal name</desc>
+	</data>
+	<data type="number">
+		<id>meal_price</id>
+		<title>Meal Price</title>
+		<placeholder>3.0</placeholder>
+		<desc>Enter a meal price</desc>
+	</data>
+	<data type="enumeration_map">
+		<id>db_groupId</id>
+		<title>Database of groupIds</title>
+		<desc>Database containing all groupIds of users</desc>
+	</data>
+	<data type="text">
+		<id>add_to_db_groupId</id>
+		<title>Add to groupId database</title>
+		<desc>On set trigger, this field adds its value into groupId db</desc>
+		<action trigger="set">
+			newData: f.this,
+			groupIdDb : f.db_groupId;
+
+			def groupIds = groupIdDb.options;
+			def uniques = new LinkedHashMap();
+			uniques.put(newData.value,newData.value);
+			
+			for (elem in groupIds) {
+				uniques.put(elem.getValue(), elem.getValue());
+			}
+			change groupIdDb options {
+				return uniques;
+			}
+		</action>
+	</data>
+	<!-- I18NS -->
+	<!-- TRANSITIONS -->
+	<transition>
+		<id>6</id>
+		<x>500</x>
+		<y>180</y>
+		<layout>
+			<offset>0</offset>
+		</layout>
+		<label>All Orders</label>
+		<icon>assessment</icon>
+		<roleRef>
+			<id>restaurant</id>
+			<logic>
+				<perform>true</perform>
+				<view>true</view>
+			</logic>
+		</roleRef>
+		<dataGroup>
+			<id>DataGroup_0</id>
+			<dataRef>
+				<id>add_to_db_groupId</id>
+				<logic>
+					<behavior>editable</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>2</y>
+					<rows>1</rows>
+					<cols>4</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>db_groupId</id>
+				<logic>
+					<behavior>editable</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>1</y>
+					<rows>1</rows>
+					<cols>4</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>order_history_taskref</id>
+				<logic>
+					<behavior>editable</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>0</y>
+					<rows>1</rows>
+					<cols>4</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+		</dataGroup>
+		<event type="assign">
+			<id>as11</id>
+			<actions phase="pre">
+				<action>
+					orderHistoryTref : f.order_history_taskref,
+					groupIdDb : f.db_groupId;
+		
+					def allGroupIds = groupIdDb.options;
+		
+					def uniqueTaskRefs = new LinkedHashMap();
+		
+					for (groupId in allGroupIds) {
+						def caseOrder = findCase{it.processIdentifier.eq("${groupId.getValue()}_meal_ordering" as String)};
+						if (null != caseOrder) {
+							def taskOrderHistory = findTask{it.caseId.eq(caseOrder.stringId).and(it.transitionId.eq("19"))};
+							if (null != taskOrderHistory) {
+								uniqueTaskRefs.put(taskOrderHistory.stringId, taskOrderHistory.stringId);
+							}
+						}
+					}
+					def isFirstIteration = true;
+					if (!uniqueTaskRefs.isEmpty()) {
+						for (entry in uniqueTaskRefs) {
+							change orderHistoryTref value {
+								if (isFirstIteration) {
+									isFirstIteration = false;
+									return [entry.getValue() as String];
+								}
+								if (null != orderHistoryTref.value) {
+									return orderHistoryTref.value + [entry.getValue() as String];
+								}
+								return [entry.getValue() as String];
+							}
+						}
+					}
+				</action>
+			</actions>
+		</event>
+	</transition>
+	<transition>
+		<id>8</id>
+		<x>380</x>
+		<y>340</y>
+		<layout>
+			<offset>0</offset>
+		</layout>
+		<label>Menu</label>
+		<icon>menu_book</icon>
+		<roleRef>
+			<id>restaurant</id>
+			<logic>
+				<perform>true</perform>
+				<view>true</view>
+			</logic>
+		</roleRef>
+		<dataGroup>
+			<id>DataGroup_0</id>
+			<dataRef>
+				<id>menu_overview</id>
+				<logic>
+					<behavior>editable</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>1</y>
+					<rows>1</rows>
+					<cols>4</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+		</dataGroup>
+	</transition>
+	<transition>
+		<id>10</id>
+		<x>260</x>
+		<y>180</y>
+		<layout>
+			<offset>0</offset>
+		</layout>
+		<label>Edit Meal</label>
+		<icon>edit</icon>
+		<roleRef>
+			<id>restaurant</id>
+			<logic>
+				<perform>true</perform>
+				<view>true</view>
+			</logic>
+		</roleRef>
+		<dataGroup>
+			<id>DataGroup_0</id>
+			<dataRef>
+				<id>meal_name</id>
+				<logic>
+					<behavior>editable</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>0</y>
+					<rows>1</rows>
+					<cols>3</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>meal_price</id>
+				<logic>
+					<behavior>editable</behavior>
+				</logic>
+				<layout>
+					<x>3</x>
+					<y>0</y>
+					<rows>1</rows>
+					<cols>1</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>menu_overview</id>
+				<logic>
+					<behavior>editable</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>2</y>
+					<rows>1</rows>
+					<cols>4</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+		</dataGroup>
+		<event type="finish">
+			<id>2_finish</id>
+			<actions phase="pre">
+				<action trigger="set">
+					name: f.meal_name,
+					price: f.meal_price,
+					menu: f.menu_overview;
+
+					def oldMenu = menu.options;
+					if (oldMenu.containsKey(name.value)) {
+						oldMenu.put(name.value,"Meal: " + name.value + " , Price: " + price.value);
+					}else{
+						oldMenu.remove(menu.value);
+						oldMenu.put(name.value,"Meal: " + name.value + " , Price: " + price.value);
+					}
+
+					change menu options {
+						return oldMenu;
+					}
+				</action>
+			</actions>
+		</event>
+		<!-- <event type="assign">
+			<id>1_assign</id>
+			<actions phase="post">
+				<action trigger="set">
+					tref: f.taskRef_0;
+
+					def groupId = findCase{it.processIdentifier.eq("org_group").and(it.author.id.eq(loggedUser().id))}?.stringId
+					def menucase = findCase{it.processIdentifier.eq("${groupId}_1_menu" as String)}
+					def task = findTask{it.caseId.eq(menucase.stringId).and(it.transitionId.eq("122"))}
+
+					change tref value {
+						return [task.stringId];
+					}
+				</action>
+			</actions>
+		</event> -->
+	</transition>
+	<transition>
+		<id>11</id>
+		<x>380</x>
+		<y>60</y>
+		<layout>
+			<offset>0</offset>
+		</layout>
+		<label>Add Meal</label>
+		<icon>add</icon>
+		<roleRef>
+			<id>restaurant</id>
+			<logic>
+				<perform>true</perform>
+				<view>true</view>
+			</logic>
+		</roleRef>
+		<dataGroup>
+			<id>DataGroup_0</id>
+			<dataRef>
+				<id>meal_name</id>
+				<logic>
+					<behavior>editable</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>0</y>
+					<rows>1</rows>
+					<cols>3</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>meal_price</id>
+				<logic>
+					<behavior>editable</behavior>
+				</logic>
+				<layout>
+					<x>3</x>
+					<y>0</y>
+					<rows>1</rows>
+					<cols>1</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
+				<id>meal_name</id>
+				<logic>
+					<behavior>editable</behavior>
+				</logic>
+				<layout>
+					<x>0</x>
+					<y>0</y>
+					<rows>1</rows>
+					<cols>2</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+		</dataGroup>
+		<event type="finish">
+			<id>1_finish</id>
+			<actions phase="pre">
+				<action trigger="set">
+					name: f.meal_name,
+					price: f.meal_price,
+					menu: f.menu_overview;
+
+					def oldMenu = menu.options;
+					oldMenu.put(name.value, "Meal: " + name.value + " , Price: " + price.value);
+					change menu options {
+						return oldMenu;
+					}
+				</action>
+			</actions>
+		</event>
+	</transition>
+	<!-- PLACES -->
+	<place>
+		<id>4</id>
+		<x>380</x>
+		<y>180</y>
+		<label>Restaurants Profile</label>
+		<tokens>1</tokens>
+		<static>false</static>
+	</place>
+	<!-- ARCS -->
+	<arc>
+		<id>7</id>
+		<type>read</type>
+		<sourceId>4</sourceId>
+		<destinationId>6</destinationId>
+		<multiplicity>1</multiplicity>
+	</arc>
+	<arc>
+		<id>9</id>
+		<type>read</type>
+		<sourceId>4</sourceId>
+		<destinationId>8</destinationId>
+		<multiplicity>1</multiplicity>
+	</arc>
+	<arc>
+		<id>12</id>
+		<type>read</type>
+		<sourceId>4</sourceId>
+		<destinationId>11</destinationId>
+		<multiplicity>1</multiplicity>
+	</arc>
+	<arc>
+		<id>15</id>
+		<type>read</type>
+		<sourceId>4</sourceId>
+		<destinationId>10</destinationId>
+		<multiplicity>1</multiplicity>
+	</arc>
+</document>

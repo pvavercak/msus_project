@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://modeler.netgrif.com/petriflow_schema.xsd">
+	<id>new_model</id>
+	<initials>NEW</initials>
+	<title>New Model</title>
+	<defaultRole>true</defaultRole>
+	<transitionRole>false</transitionRole>
+	<!-- TRANSACTIONS -->
+	<!-- ROLES -->
+	<role>
+		<id>system</id>
+		<title>System creation</title>
+	</role>
+	<role>
+		<id>edit_menu</id>
+		<title>Menu Author</title>
+	</role>
+	<role>
+		<id>employee</id>
+		<title>Employee</title>
+	</role>
+	<role>
+		<id>employer</id>
+		<title>Administrator of Employees Accounts</title>
+	</role>
+	<!-- DATA -->
+	<data type="text">
+		<id>login_message</id>
+		<title>Login Notification</title>
+	</data>
+	<!-- I18NS -->
+	<!-- TRANSITIONS -->
+	<transition>
+		<id>2</id>
+		<x>180</x>
+		<y>60</y>
+		<layout>
+			<offset>0</offset>
+		</layout>
+		<label>Deploy System</label>
+		<icon>settings</icon>
+		<assignPolicy>auto</assignPolicy>
+		<finishPolicy>auto_no_data</finishPolicy>
+		<roleRef>
+			<id>system</id>
+			<logic>
+				<perform>true</perform>
+				<delegate>true</delegate>
+				<view>true</view>
+			</logic>
+		</roleRef>
+	</transition>
+	<!-- PLACES -->
+	<place>
+		<id>1</id>
+		<x>60</x>
+		<y>60</y>
+		<label>Initial State</label>
+		<tokens>1</tokens>
+		<static>false</static>
+	</place>
+	<place>
+		<id>4</id>
+		<x>300</x>
+		<y>60</y>
+		<label>System Up</label>
+		<tokens>0</tokens>
+		<static>false</static>
+	</place>
+	<!-- ARCS -->
+	<arc>
+		<id>3</id>
+		<type>regular</type>
+		<sourceId>1</sourceId>
+		<destinationId>2</destinationId>
+		<multiplicity>1</multiplicity>
+	</arc>
+	<arc>
+		<id>5</id>
+		<type>regular</type>
+		<sourceId>2</sourceId>
+		<destinationId>4</destinationId>
+		<multiplicity>1</multiplicity>
+	</arc>
+</document>
