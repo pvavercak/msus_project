@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <document xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://modeler.netgrif.com/petriflow_schema.xsd">
-	<id>menu_and_orders</id>
+	<id>restaurant</id>
 	<version>1.0.0</version>
-	<initials>MAR</initials>
-	<title>Menu And Orders</title>
+	<initials>MEN</initials>
+	<title>Restaurant</title>
 	<defaultRole>true</defaultRole>
 	<transitionRole>false</transitionRole>
 	<!-- TRANSACTIONS -->
@@ -16,6 +16,11 @@
 	<data type="taskRef">
 		<id>order_history_taskref</id>
 		<title>History Of Orders</title>
+		<desc>There are all placed orders</desc>
+	</data>
+	<data type="taskRef">
+		<id>order_history_backup</id>
+		<title>Backup of History Of Orders</title>
 		<desc>There are all placed orders</desc>
 	</data>
 	<data type="enumeration_map">
@@ -50,6 +55,74 @@
 		<desc>Enter a meal price</desc>
 	</data>
 	<data type="enumeration_map">
+		<id>search_by_employee</id>
+		<title>Select an employee</title>
+		<desc>Selected employee will be displayed</desc>
+		<options>
+			<option key="defaultFilter">Display all employees</option>
+		</options>
+		<init></init>
+		<action trigger="get">
+			searchEmployee: f.search_by_employee,
+			groupIdDb: f.db_groupId;
+
+			def allChoices = searchEmployee.options;
+			def allOptions = groupIdDb.options;
+			
+			for (elem in allOptions) {
+				def noDotsAsString = elem.getValue() as String;
+				def noDots = noDotsAsString.replaceAll(/\./, "_")
+				allChoices.put(noDots, noDotsAsString);
+			}
+			change searchEmployee options {
+				return allChoices;
+			}
+		</action>
+		<action trigger="set">
+			selectUser: f.search_by_employee,
+			orderHistoryTref: f.order_history_taskref,
+			orderHistoryBackup: f.order_history_backup,
+			outputik: f.outputik,
+			groupIdDb: f.db_groupId;
+
+			def selectedUser = selectUser.value as String;
+			selectedUser = selectedUser.replaceAll("\\s", "") as String;
+			if (!selectedUser.equals("defaultFilter" as String)) {
+				for (elem in groupIdDb.options) {
+					def compareTo = elem.getValue() as String;
+					compareTo = compareTo.replaceAll("\\s", "");
+					compareTo = compareTo.replaceAll(/\./, "_") as String;
+
+					change outputik value {
+						return selectedUser + " , " + compareTo;
+					}
+					if (compareTo.equals(selectedUser as String)) {
+						def withoutSpaces = elem.getKey() as String;
+						withoutSpaces = withoutSpaces.replaceAll("\\s", "");
+						def caseOrder = findCase{it._id.eq(new org.bson.types.ObjectId(withoutSpaces))};
+						if (null != caseOrder) {
+							def taskOrderHistory = findTask{it.caseId.eq(caseOrder.stringId as String).and(it.transitionId.eq("19"))};
+							if (null != taskOrderHistory) {
+								change orderHistoryTref value {
+									return [taskOrderHistory.stringId];
+								}
+							}
+						}
+					}
+				}
+			}
+			else {
+				change orderHistoryTref value {
+					return orderHistoryBackup.value;
+				}
+			}
+
+			<!-- change orderHistoryTref value {
+				return orderHistoryBackup;
+			} -->
+		</action>
+	</data>
+	<data type="enumeration_map">
 		<id>db_groupId</id>
 		<title>Database of groupIds</title>
 		<desc>Database containing all groupIds of users</desc>
@@ -63,8 +136,10 @@
 			groupIdDb : f.db_groupId;
 
 			def groupIds = groupIdDb.options;
+			def tokensAsString = newData.value as String;
+			def tokens = tokensAsString.split(",");
 			<!-- def uniques = new LinkedHashMap(); -->
-			groupIds.put(newData.value,newData.value);
+			groupIds.put(tokens[0],tokens[1]);
 			
 			<!-- for (elem in groupIds) {
 				uniques.put(elem.getValue(), elem.getValue());
@@ -140,6 +215,21 @@
 				</layout>
 			</dataRef>
 			<dataRef>
+				<id>search_by_employee</id>
+				<logic>
+					<behavior>editable</behavior>
+				</logic>
+				<layout>
+					<x>4</x>
+					<y>1</y>
+					<rows>1</rows>
+					<cols>4</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
 				<id>order_history_taskref</id>
 				<logic>
 					<behavior>editable</behavior>
@@ -157,9 +247,11 @@
 		</dataGroup>
 		<event type="assign">
 			<id>as11</id>
-			<actions phase="pre">
+			<actions phase="post">
 				<action>
 					orderHistoryTref : f.order_history_taskref,
+					orderHistoryBackup: f.order_history_backup,
+					selectUser: f.search_by_employee,
 					outputik: f.outputik,
 					groupIdDb : f.db_groupId;
 		
@@ -168,34 +260,17 @@
 					def uniqueTaskRefs = new LinkedHashMap();
 
 					for (useCaseUniqueId in allGroupIds) {
-						def withoutSpaces = useCaseUniqueId.getValue() as String;
+						def withoutSpaces = useCaseUniqueId.getKey() as String;
 						withoutSpaces = withoutSpaces.replaceAll("\\s", "");
 						def caseOrder = findCase{it._id.eq(new org.bson.types.ObjectId(withoutSpaces))};
 						if (null != caseOrder) {
 							def taskOrderHistory = findTask{it.caseId.eq(caseOrder.stringId as String).and(it.transitionId.eq("19"))};
 							if (null != taskOrderHistory) {
 								uniqueTaskRefs.put(taskOrderHistory.stringId, taskOrderHistory.stringId);
-								<!-- change orderHistoryTref value {
-									if (null != orderHistoryTref.value) {
-										return orderHistoryTref.value + [taskOrderHistory.stringId];
-									}
-									return [taskOrderHistory.stringId];
-								} -->
 							}
-							<!-- else {
-								change outputik value {
-									return caseOrder.stringId as String;
-								}
-								break;
-							} -->
 						}
-						<!-- else {
-							change outputik value {
-								return "case is null ${withoutSpaces}";
-							}
-							break;
-						} -->
 					}
+
 					def isFirstIteration = true;
 					if (!uniqueTaskRefs.isEmpty()) {
 						for (entry in uniqueTaskRefs) {
@@ -204,13 +279,12 @@
 									isFirstIteration = false;
 									return [entry.getValue() as String];
 								}
-								<!-- if (null != orderHistoryTref.value) {
-									return orderHistoryTref.value + [entry.getValue() as String];
-								} -->
 								return orderHistoryTref.value + [entry.getValue() as String];
-								<!-- return [entry.getValue() as String]; -->
 							}
 						}
+					}
+					change orderHistoryBackup value {
+						return orderHistoryTref.value;
 					}
 				</action>
 			</actions>

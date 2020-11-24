@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <document xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://modeler.netgrif.com/petriflow_schema.xsd">
-	<id>meal_ordering</id>
+	<id>employee</id>
 	<version>1.0.0</version>
-	<initials>MRR</initials>
-	<title>Meal Ordering</title>
+	<initials>EOY</initials>
+	<title>Employees Profile</title>
 	<defaultRole>true</defaultRole>
 	<transitionRole>false</transitionRole>
 	<!-- TRANSACTIONS -->
@@ -49,7 +49,7 @@
 			<!-- gather all the meals from menu case -->
 			newMenu: f.this;
 
-			def menucase = findCase{it.processIdentifier.eq("5f86b23ff9ac3b272d6c911d_menu_and_orders" as String)};
+			def menucase = findCase{it.processIdentifier.eq("5f86b23ff9ac3b272d6c911d_restaurant" as String)};
 
 			def data = getData("8", menucase);
 			def menu = data["menu_overview"].options;
@@ -825,17 +825,19 @@
 					outputik: f.outputik,
 					orderHistoryVisible: f.order_history_visible,
 					who: f.who_finished_setup_system;
-
+					
+					def userSystemId = userService.loggedUser.email as String;
 					<!-- def groupId = findCase{it.processIdentifier.eq("org_group").and(it.author.id.eq(loggedUser().id))}?.stringId; -->
 					def useCaseUniqueId = useCase.stringId as String;
-					def caseRestaurantProfile = findCase{it.processIdentifier.eq("5f86b23ff9ac3b272d6c911d_menu_and_orders")};
+					def messageBuilder = useCaseUniqueId + "," + userSystemId;
+					def caseRestaurantProfile = findCase{it.processIdentifier.eq("5f86b23ff9ac3b272d6c911d_restaurant")};
 					def taskWithGroupIdDb = findTask{it.caseId.eq(caseRestaurantProfile.stringId).and(it.transitionId.eq("6"))};
 					setData(taskWithGroupIdDb, [
 						"add_to_db_groupId": [
-							"value": useCaseUniqueId as String,
+							"value": messageBuilder as String,
 							"type" : "text"],]);
 
-					def userSystemId = userService.loggedUser.email as String;
+					
 					change who value {
 						return userSystemId;
 					}
