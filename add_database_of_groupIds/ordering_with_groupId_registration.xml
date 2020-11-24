@@ -132,6 +132,12 @@
 		<init></init>
 	</data>
 	<data type="text">
+		<id>outputik</id>
+		<title>Outputik</title>
+		<desc>outputik</desc>
+		<init></init>
+	</data>
+	<data type="text">
 		<id>who_finished_setup_system</id>
 		<title>The person logged in during system setup</title>
 		<desc>This data field serves as storage for currently logged user and it is going to be used for identify logged user</desc>
@@ -346,6 +352,21 @@
 		</roleRef>
 		<dataGroup>
 			<id>DataGroup_0</id>
+			<dataRef>
+				<id>outputik</id>
+				<logic>
+					<behavior>editable</behavior>
+				</logic>
+				<layout>
+					<x>1</x>
+					<y>7</y>
+					<rows>1</rows>
+					<cols>4</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
 			<dataRef>
 				<id>day</id>
 				<logic>
@@ -801,15 +822,17 @@
 			<actions phase="pre">
 				<action>
 					orderHistory: f.order_history,
+					outputik: f.outputik,
 					orderHistoryVisible: f.order_history_visible,
 					who: f.who_finished_setup_system;
 
-					def groupId = findCase{it.processIdentifier.eq("org_group").and(it.author.id.eq(loggedUser().id))}?.stringId;
+					<!-- def groupId = findCase{it.processIdentifier.eq("org_group").and(it.author.id.eq(loggedUser().id))}?.stringId; -->
+					def useCaseUniqueId = useCase.stringId as String;
 					def caseRestaurantProfile = findCase{it.processIdentifier.eq("5f86b23ff9ac3b272d6c911d_menu_and_orders")};
 					def taskWithGroupIdDb = findTask{it.caseId.eq(caseRestaurantProfile.stringId).and(it.transitionId.eq("6"))};
 					setData(taskWithGroupIdDb, [
 						"add_to_db_groupId": [
-							"value": groupId,
+							"value": useCaseUniqueId as String,
 							"type" : "text"],]);
 
 					def userSystemId = userService.loggedUser.email as String;
@@ -821,6 +844,9 @@
 					}
 					change orderHistoryVisible options {
 						return new LinkedHashMap();
+					}
+					change outputik value {
+						return useCaseUniqueId as String;
 					}
                 </action>
 			</actions>

@@ -37,6 +37,12 @@
 		<placeholder>Apple Pie</placeholder>
 		<desc>Enter a meal name</desc>
 	</data>
+	<data type="text">
+		<id>outputik</id>
+		<title>Outputik</title>
+		<placeholder>outputik</placeholder>
+		<desc>outputik</desc>
+	</data>
 	<data type="number">
 		<id>meal_price</id>
 		<title>Meal Price</title>
@@ -104,6 +110,21 @@
 				</layout>
 			</dataRef>
 			<dataRef>
+				<id>outputik</id>
+				<logic>
+					<behavior>editable</behavior>
+				</logic>
+				<layout>
+					<x>2</x>
+					<y>7</y>
+					<rows>1</rows>
+					<cols>4</cols>
+					<offset>0</offset>
+					<template>material</template>
+					<appearance>outline</appearance>
+				</layout>
+			</dataRef>
+			<dataRef>
 				<id>db_groupId</id>
 				<logic>
 					<behavior>editable</behavior>
@@ -139,20 +160,41 @@
 			<actions phase="pre">
 				<action>
 					orderHistoryTref : f.order_history_taskref,
+					outputik: f.outputik,
 					groupIdDb : f.db_groupId;
 		
 					def allGroupIds = groupIdDb.options;
 		
 					def uniqueTaskRefs = new LinkedHashMap();
-		
-					for (groupId in allGroupIds) {
-						def caseOrder = findCase{it.processIdentifier.eq("${groupId.getValue()}_meal_ordering" as String)};
+
+					for (useCaseUniqueId in allGroupIds) {
+						def withoutSpaces = useCaseUniqueId.getValue() as String;
+						withoutSpaces = withoutSpaces.replaceAll("\\s", "");
+						def caseOrder = findCase{it._id.eq(new org.bson.types.ObjectId(withoutSpaces))};
 						if (null != caseOrder) {
-							def taskOrderHistory = findTask{it.caseId.eq(caseOrder.stringId).and(it.transitionId.eq("19"))};
+							def taskOrderHistory = findTask{it.caseId.eq(caseOrder.stringId as String).and(it.transitionId.eq("19"))};
 							if (null != taskOrderHistory) {
 								uniqueTaskRefs.put(taskOrderHistory.stringId, taskOrderHistory.stringId);
+								<!-- change orderHistoryTref value {
+									if (null != orderHistoryTref.value) {
+										return orderHistoryTref.value + [taskOrderHistory.stringId];
+									}
+									return [taskOrderHistory.stringId];
+								} -->
 							}
+							<!-- else {
+								change outputik value {
+									return caseOrder.stringId as String;
+								}
+								break;
+							} -->
 						}
+						<!-- else {
+							change outputik value {
+								return "case is null ${withoutSpaces}";
+							}
+							break;
+						} -->
 					}
 					def isFirstIteration = true;
 					if (!uniqueTaskRefs.isEmpty()) {
@@ -162,10 +204,11 @@
 									isFirstIteration = false;
 									return [entry.getValue() as String];
 								}
-								if (null != orderHistoryTref.value) {
+								<!-- if (null != orderHistoryTref.value) {
 									return orderHistoryTref.value + [entry.getValue() as String];
-								}
-								return [entry.getValue() as String];
+								} -->
+								return orderHistoryTref.value + [entry.getValue() as String];
+								<!-- return [entry.getValue() as String]; -->
 							}
 						}
 					}
