@@ -65,76 +65,10 @@
 			}
 		</action>
 	</data>
-	<!-- <data type="enumeration">
-		<id>order_email</id>
-		<title>set label</title>
-		<placeholder>placeholder</placeholder>
-		<desc>description</desc>
-		<values>xvavercak@stuba.sk</values>
-		<values>xfedorko@stuba.sk</values>
-		<values>xspak@stuba.sk</values>
-		<values>xbilansky@stuba.sk</values>
-		<init></init>
-		<action trigger="set">
-			fromDate: f.date_from,
-			toDate: f.date_to,
-			originalOrders: f.order_history,
-			emails: f.order_email,
-			orders: f.order_history_visible;
-
-			def allOrders = originalOrders.options;
-			def filteredOrders = new LinkedHashMap();
-			def email = emails.value;
-			if (email != null){
-				email = email as String;
-				email = email.replaceAll("\\s",""); 
-			}
-			for(entry in allOrders) {
-				def valid = true;
-				def entryValue = entry.getValue() as String;
-				def tokens = entryValue.split(',');
-
-				def formatter = java.time.format.DateTimeFormatter.ofPattern("dd.MM.yyyy");
-				def df = tokens[1].replaceAll("\\s","");
-				def mail = tokens[0].replaceAll("\\s","");
-				def datelimit = java.time.LocalDate.parse(df, formatter);
-
-				if(email != null){
-					if (!mail.equals(email)){
-						valid = false;
-					}
-				}
-				
-				if (fromDate.value != null){
-					if (datelimit.isBefore(fromDate.value)){
-						valid = false;
-					}
-				}
-				if (toDate.value != null){
-					if (datelimit.isAfter(toDate.value)){
-						valid = false;
-					}
-				}
-				if (valid){
-					filteredOrders.put(entry.key,entryValue);
-				}
-			}
-
-			change orders options {
-				return filteredOrders;
-			}
-		</action>
-	</data> -->
 	<data type="text">
 		<id>already_ordered</id>
 		<title>Order for this day</title>
 		<desc>A meal you have already ordered for the selected day</desc>
-		<init></init>
-	</data>
-	<data type="text">
-		<id>outputik</id>
-		<title>Outputik</title>
-		<desc>outputik</desc>
 		<init></init>
 	</data>
 	<data type="text">
@@ -148,7 +82,7 @@
 		<desc>Select a day you want to order for</desc>
 		<init></init>
 		<action trigger="get">
-			<!-- This action adds  choices to day according to a current day of the week-->
+			<!-- This action adds choices to day according to a current day of the week-->
 			daysEnum: f.this;
 
 			def dowArray = [
@@ -168,7 +102,7 @@
 			}
 		</action>
 		<action trigger="set">
-			<!-- verifies is we already have some orders -->
+			<!-- verifies if we already have some orders -->
 			canDeleteOrderMultiplicity: f.4000,
 			daysEnum: f.this,
 			orderHistory: f.order_history,
@@ -245,7 +179,6 @@
 			fromDate: f.date_from,
 			toDate: f.date_to,
 			originalOrders: f.order_history,
-			<!-- emails: f.order_email, -->
 			orders: f.order_history_visible;
 
 			def allOrders = originalOrders.options;
@@ -258,14 +191,7 @@
 
 				def formatter = java.time.format.DateTimeFormatter.ofPattern("dd.MM.yyyy");
 				def df = tokens[1].replaceAll("\\s","");
-				<!-- def mail = tokens[0].replaceAll("\\s",""); -->
 				def datelimit = java.time.LocalDate.parse(df, formatter);
-
-				<!-- if(email != null){
-					if (!mail.equals(email)){
-						valid = false;
-					}
-				} -->
 				
 				if (fromDate.value != null){
 					if (datelimit.isBefore(fromDate.value)){
@@ -352,21 +278,6 @@
 		</roleRef>
 		<dataGroup>
 			<id>DataGroup_0</id>
-			<dataRef>
-				<id>outputik</id>
-				<logic>
-					<behavior>editable</behavior>
-				</logic>
-				<layout>
-					<x>1</x>
-					<y>7</y>
-					<rows>1</rows>
-					<cols>4</cols>
-					<offset>0</offset>
-					<template>material</template>
-					<appearance>outline</appearance>
-				</layout>
-			</dataRef>
 			<dataRef>
 				<id>day</id>
 				<logic>
@@ -528,21 +439,6 @@
 					<appearance>outline</appearance>
 				</layout>
 			</dataRef>
-			<!-- <dataRef>
-				<id>order_email</id>
-				<logic>
-					<behavior>hidden</behavior>
-				</logic>
-				<layout>
-					<x>0</x>
-					<y>0</y>
-					<rows>1</rows>
-					<cols>4</cols>
-					<offset>0</offset>
-					<template>material</template>
-					<appearance>outline</appearance>
-				</layout>
-			</dataRef> -->
 			<dataRef>
 				<id>date_to</id>
 				<logic>
@@ -600,42 +496,21 @@
 					who: f.who_finished_setup_system,
 					loggedIn: f.4001,
 					tr : t.this;
-					<!-- emails: f.order_email; -->
 
 					def userSystemId = userService.loggedUser.email as String;
-					<!-- change emails value {
-						return userSystemId;
-					} -->
 
 					if (!userSystemId.equals(who.value as String)) {
-						<!-- make emails, hidden on tr when { return true; } -->
 						make fromDate, hidden on tr when { return true };
 						make toDate, hidden on tr when { return true };
-						<!-- make originalOrders, hidden on tr when { return true }; -->
 						make orders, hidden on tr when { return true };
 					} else {
-						<!-- make emails, editable on tr when { return true; } -->
 						make fromDate, editable on tr when { return true };
 						make toDate, editable on tr when { return true };
-						<!-- make originalOrders, editable on tr when { return true }; -->
 						make orders, editable on tr when { return true };
 					}
 				</action>
 			</actions>
 		</event>
-		<!-- <event type="finish">
-			<id>3_finish</id>
-			<actions phase="pre">
-				<action>
-					tr : t.this,
-					emails: f.order_email;
-					
-					make emails, editable on tr when {
-						return true;
-					}
-                </action>
-			</actions>
-		</event> -->
 	</transition>
 	<transition>
 		<id>23</id>
@@ -801,7 +676,6 @@
 			<id>employee</id>
 			<logic>
 				<perform>true</perform>
-				<delegate>true</delegate>
 				<view>true</view>
 			</logic>
 		</roleRef>
@@ -822,12 +696,10 @@
 			<actions phase="pre">
 				<action>
 					orderHistory: f.order_history,
-					outputik: f.outputik,
 					orderHistoryVisible: f.order_history_visible,
 					who: f.who_finished_setup_system;
 					
 					def userSystemId = userService.loggedUser.email as String;
-					<!-- def groupId = findCase{it.processIdentifier.eq("org_group").and(it.author.id.eq(loggedUser().id))}?.stringId; -->
 					def useCaseUniqueId = useCase.stringId as String;
 					def messageBuilder = useCaseUniqueId + "," + userSystemId;
 					def caseRestaurantProfile = findCase{it.processIdentifier.eq("5f86b23ff9ac3b272d6c911d_restaurant")};
@@ -847,13 +719,9 @@
 					change orderHistoryVisible options {
 						return new LinkedHashMap();
 					}
-					change outputik value {
-						return useCaseUniqueId as String;
-					}
                 </action>
 			</actions>
 		</event>
-		
 	</transition>
 	<!-- PLACES -->
 	<place>

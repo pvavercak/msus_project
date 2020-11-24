@@ -10,7 +10,11 @@
 	<!-- ROLES -->
 	<role>
 		<id>restaurant</id>
-		<title>Restaurant</title>
+		<title>Administrator</title>
+	</role>
+	<role>
+		<id>chef</id>
+		<title>Chef</title>
 	</role>
 	<!-- DATA -->
 	<data type="taskRef">
@@ -41,12 +45,6 @@
 		<title>Meal Name</title>
 		<placeholder>Apple Pie</placeholder>
 		<desc>Enter a meal name</desc>
-	</data>
-	<data type="text">
-		<id>outputik</id>
-		<title>Outputik</title>
-		<placeholder>outputik</placeholder>
-		<desc>outputik</desc>
 	</data>
 	<data type="number">
 		<id>meal_price</id>
@@ -82,7 +80,6 @@
 			selectUser: f.search_by_employee,
 			orderHistoryTref: f.order_history_taskref,
 			orderHistoryBackup: f.order_history_backup,
-			outputik: f.outputik,
 			groupIdDb: f.db_groupId;
 
 			def selectedUser = selectUser.value as String;
@@ -93,9 +90,6 @@
 					compareTo = compareTo.replaceAll("\\s", "");
 					compareTo = compareTo.replaceAll(/\./, "_") as String;
 
-					change outputik value {
-						return selectedUser + " , " + compareTo;
-					}
 					if (compareTo.equals(selectedUser as String)) {
 						def withoutSpaces = elem.getKey() as String;
 						withoutSpaces = withoutSpaces.replaceAll("\\s", "");
@@ -116,10 +110,6 @@
 					return orderHistoryBackup.value;
 				}
 			}
-
-			<!-- change orderHistoryTref value {
-				return orderHistoryBackup;
-			} -->
 		</action>
 	</data>
 	<data type="enumeration_map">
@@ -138,12 +128,9 @@
 			def groupIds = groupIdDb.options;
 			def tokensAsString = newData.value as String;
 			def tokens = tokensAsString.split(",");
-			<!-- def uniques = new LinkedHashMap(); -->
+			
 			groupIds.put(tokens[0],tokens[1]);
 			
-			<!-- for (elem in groupIds) {
-				uniques.put(elem.getValue(), elem.getValue());
-			} -->
 			change groupIdDb options {
 				return groupIds;
 			}
@@ -170,58 +157,13 @@
 		<dataGroup>
 			<id>DataGroup_0</id>
 			<dataRef>
-				<id>add_to_db_groupId</id>
-				<logic>
-					<behavior>editable</behavior>
-				</logic>
-				<layout>
-					<x>0</x>
-					<y>2</y>
-					<rows>1</rows>
-					<cols>4</cols>
-					<offset>0</offset>
-					<template>material</template>
-					<appearance>outline</appearance>
-				</layout>
-			</dataRef>
-			<dataRef>
-				<id>outputik</id>
-				<logic>
-					<behavior>editable</behavior>
-				</logic>
-				<layout>
-					<x>2</x>
-					<y>7</y>
-					<rows>1</rows>
-					<cols>4</cols>
-					<offset>0</offset>
-					<template>material</template>
-					<appearance>outline</appearance>
-				</layout>
-			</dataRef>
-			<dataRef>
-				<id>db_groupId</id>
-				<logic>
-					<behavior>editable</behavior>
-				</logic>
-				<layout>
-					<x>0</x>
-					<y>1</y>
-					<rows>1</rows>
-					<cols>4</cols>
-					<offset>0</offset>
-					<template>material</template>
-					<appearance>outline</appearance>
-				</layout>
-			</dataRef>
-			<dataRef>
 				<id>search_by_employee</id>
 				<logic>
 					<behavior>editable</behavior>
 				</logic>
 				<layout>
-					<x>4</x>
-					<y>1</y>
+					<x>0</x>
+					<y>0</y>
 					<rows>1</rows>
 					<cols>4</cols>
 					<offset>0</offset>
@@ -236,7 +178,7 @@
 				</logic>
 				<layout>
 					<x>0</x>
-					<y>0</y>
+					<y>1</y>
 					<rows>1</rows>
 					<cols>4</cols>
 					<offset>0</offset>
@@ -252,7 +194,6 @@
 					orderHistoryTref : f.order_history_taskref,
 					orderHistoryBackup: f.order_history_backup,
 					selectUser: f.search_by_employee,
-					outputik: f.outputik,
 					groupIdDb : f.db_groupId;
 		
 					def allGroupIds = groupIdDb.options;
@@ -306,6 +247,13 @@
 				<view>true</view>
 			</logic>
 		</roleRef>
+		<roleRef>
+			<id>chef</id>
+			<logic>
+				<perform>true</perform>
+				<view>true</view>
+			</logic>
+		</roleRef>
 		<dataGroup>
 			<id>DataGroup_0</id>
 			<dataRef>
@@ -347,6 +295,7 @@
 				<id>meal_name</id>
 				<logic>
 					<behavior>editable</behavior>
+					<behavior>required</behavior>
 				</logic>
 				<layout>
 					<x>0</x>
@@ -362,6 +311,7 @@
 				<id>meal_price</id>
 				<logic>
 					<behavior>editable</behavior>
+					<behavior>required</behavior>
 				</logic>
 				<layout>
 					<x>3</x>
@@ -377,10 +327,11 @@
 				<id>menu_overview</id>
 				<logic>
 					<behavior>editable</behavior>
+					<behavior>required</behavior>
 				</logic>
 				<layout>
 					<x>0</x>
-					<y>2</y>
+					<y>1</y>
 					<rows>1</rows>
 					<cols>4</cols>
 					<offset>0</offset>
@@ -411,22 +362,6 @@
 				</action>
 			</actions>
 		</event>
-		<!-- <event type="assign">
-			<id>1_assign</id>
-			<actions phase="post">
-				<action trigger="set">
-					tref: f.taskRef_0;
-
-					def groupId = findCase{it.processIdentifier.eq("org_group").and(it.author.id.eq(loggedUser().id))}?.stringId
-					def menucase = findCase{it.processIdentifier.eq("${groupId}_1_menu" as String)}
-					def task = findTask{it.caseId.eq(menucase.stringId).and(it.transitionId.eq("122"))}
-
-					change tref value {
-						return [task.stringId];
-					}
-				</action>
-			</actions>
-		</event> -->
 	</transition>
 	<transition>
 		<id>11</id>
@@ -471,21 +406,6 @@
 					<y>0</y>
 					<rows>1</rows>
 					<cols>1</cols>
-					<offset>0</offset>
-					<template>material</template>
-					<appearance>outline</appearance>
-				</layout>
-			</dataRef>
-			<dataRef>
-				<id>meal_name</id>
-				<logic>
-					<behavior>editable</behavior>
-				</logic>
-				<layout>
-					<x>0</x>
-					<y>0</y>
-					<rows>1</rows>
-					<cols>2</cols>
 					<offset>0</offset>
 					<template>material</template>
 					<appearance>outline</appearance>
