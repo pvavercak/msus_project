@@ -154,6 +154,13 @@
 				<view>true</view>
 			</logic>
 		</roleRef>
+		<roleRef>
+			<id>chef</id>
+			<logic>
+				<perform>true</perform>
+				<view>true</view>
+			</logic>
+		</roleRef>
 		<dataGroup>
 			<id>DataGroup_0</id>
 			<dataRef>
@@ -242,13 +249,6 @@
 		<icon>menu_book</icon>
 		<roleRef>
 			<id>restaurant</id>
-			<logic>
-				<perform>true</perform>
-				<view>true</view>
-			</logic>
-		</roleRef>
-		<roleRef>
-			<id>chef</id>
 			<logic>
 				<perform>true</perform>
 				<view>true</view>

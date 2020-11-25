@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <document xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://modeler.netgrif.com/petriflow_schema.xsd">
-	<id>employee</id>
+	<id>employee_profile</id>
 	<version>1.0.0</version>
 	<initials>PLY</initials>
 	<title>Employe</title>
@@ -316,7 +316,6 @@
 				<action>
 					who: f.who_finished_setup_system,
 					nextArc: f.4002,
-					outputik: f.outputik,
 					backArc: f.4001,
 					canDeleteOrderMultiplicity: f.4000,
 					daysEnum: f.day,
