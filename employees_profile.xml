@@ -2,8 +2,8 @@
 <document xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://modeler.netgrif.com/petriflow_schema.xsd">
 	<id>employee</id>
 	<version>1.0.0</version>
-	<initials>EOY</initials>
-	<title>Employees Profile</title>
+	<initials>PLY</initials>
+	<title>Employe</title>
 	<defaultRole>true</defaultRole>
 	<transitionRole>false</transitionRole>
 	<!-- TRANSACTIONS -->
@@ -49,7 +49,7 @@
 			<!-- gather all the meals from menu case -->
 			newMenu: f.this;
 
-			def menucase = findCase{it.processIdentifier.eq("5f86b23ff9ac3b272d6c911d_restaurant" as String)};
+			def menucase = findCase{it.processIdentifier.eq("5f86b23ff9ac3b272d6c911d_resto" as String)};
 
 			def data = getData("8", menucase);
 			def menu = data["menu_overview"].options;
@@ -311,40 +311,13 @@
 			</dataRef>
 		</dataGroup>
 		<event type="assign">
-			<id>5_asn</id>
-			<actions phase="pre">
-				<action>
-					who: f.who_finished_setup_system,
-					day : f.day,
-					tr: t.this,
-					nextArc: f.4002,
-					backArc: f.4001;
-
-					change backArc value {
-						return "0";
-					}
-					change nextArc value {
-						return "1";
-					}
-					make day,editable on tr when { return true; }
-
-					def userSystemId = userService.loggedUser.email as String;
-					if (userSystemId != who.value) {
-						change backArc value {
-							return "1";
-						}
-						change nextArc value {
-							return "0";
-						}
-						make day,hidden on tr when { return true; }
-					}
-                </action>
-			</actions>
-		</event>
-		<event type="assign">
-			<id>5_asn</id>
+			<id>3_asn</id>
 			<actions phase="post">
 				<action>
+					who: f.who_finished_setup_system,
+					nextArc: f.4002,
+					outputik: f.outputik,
+					backArc: f.4001,
 					canDeleteOrderMultiplicity: f.4000,
 					daysEnum: f.day,
 					orderHistory: f.order_history,
@@ -375,6 +348,14 @@
 						return "5";
 					}
 
+					change backArc value {
+						return "0";
+					}
+					change nextArc value {
+						return "1";
+					}
+					make daysEnum,editable on tr when { return true; }
+
 					def key = "${userSystemId}_${currentOrderDate.format('dd.MM.yyyy')}";
 					key = key.replaceAll(/\./, "_");
 
@@ -391,6 +372,16 @@
 						change canDeleteOrderMultiplicity value {
 							return "1";
 						}
+					}
+
+					if (!userSystemId.equals(who.value as String)) {
+						change backArc value {
+							return "1";
+						}
+						change nextArc value {
+							return "0";
+						}
+						make daysEnum,hidden on tr when { return true; }
 					}
                 </action>
 			</actions>
@@ -692,7 +683,7 @@
 		<assignPolicy>auto</assignPolicy>
 		<finishPolicy>auto_no_data</finishPolicy>
 		<event type="finish">
-			<id>5_asn</id>
+			<id>1_finish</id>
 			<actions phase="pre">
 				<action>
 					orderHistory: f.order_history,
@@ -702,7 +693,7 @@
 					def userSystemId = userService.loggedUser.email as String;
 					def useCaseUniqueId = useCase.stringId as String;
 					def messageBuilder = useCaseUniqueId + "," + userSystemId;
-					def caseRestaurantProfile = findCase{it.processIdentifier.eq("5f86b23ff9ac3b272d6c911d_restaurant")};
+					def caseRestaurantProfile = findCase{it.processIdentifier.eq("5f86b23ff9ac3b272d6c911d_resto")};
 					def taskWithGroupIdDb = findTask{it.caseId.eq(caseRestaurantProfile.stringId).and(it.transitionId.eq("6"))};
 					setData(taskWithGroupIdDb, [
 						"add_to_db_groupId": [

@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <document xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://modeler.netgrif.com/petriflow_schema.xsd">
-	<id>restaurant</id>
+	<id>resto</id>
 	<version>1.0.0</version>
-	<initials>MEN</initials>
+	<initials>RST</initials>
 	<title>Restaurant</title>
 	<defaultRole>true</defaultRole>
 	<transitionRole>false</transitionRole>
